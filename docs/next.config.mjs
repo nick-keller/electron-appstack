@@ -11,4 +11,9 @@ const withNextra = nextra({
   }
 })
 
-export default withNextra({})
+export default withNextra({
+  // Fully static site, served by Cloudflare Workers Static Assets
+  output: 'export',
+  // No image optimizer in a static export
+  images: { unoptimized: true }
+})

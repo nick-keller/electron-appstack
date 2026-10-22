@@ -8,6 +8,7 @@ node_modules
 docs/.next
 docs/out
 docs/public/_pagefind
+docs/.wrangler
 docs/next-env.d.ts
 
 # template

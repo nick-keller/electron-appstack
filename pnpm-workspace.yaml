@@ -24,6 +24,7 @@ allowBuilds:
   better-sqlite3: true
   electron: true
   esbuild: true
+  workerd: true
   electron-winstaller: false
 
 overrides:

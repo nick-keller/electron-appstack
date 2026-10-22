@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "electron-appstack-docs",
+  "compatibility_date": "2026-10-01",
+  // Static-only Worker: no script, Cloudflare serves the Next.js export directly
+  "assets": {
+    "directory": "./out",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
