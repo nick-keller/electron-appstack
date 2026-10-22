@@ -40,6 +40,12 @@ const features = [
     href: '/doc/auto-update'
   },
   {
+    title: 'Source code protection',
+    description:
+      'Main process shipped as V8 bytecode, locked down with Electron fuses and ASAR integrity.',
+    href: '/doc/source-protection'
+  },
+  {
     title: 'Dark mode and translations',
     description: 'System, light or dark theme and i18next, in the renderer and the native menu.',
     href: '/doc/theming'

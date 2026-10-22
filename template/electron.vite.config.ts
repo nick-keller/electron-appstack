@@ -15,7 +15,12 @@ export default defineConfig({
     build: {
       // Packages listed in `dependencies` stay external (loaded from node_modules at runtime).
       // Everything in `devDependencies` is bundled. electron-store is ESM-only, so it must be bundled.
-      externalizeDeps: { exclude: ['electron-store'] }
+      externalizeDeps: { exclude: ['electron-store'] },
+      // Source code protection: the main process is compiled to V8 bytecode in production builds,
+      // so the shipped app contains no readable JavaScript for it. See docs: Source Code Protection.
+      // `transformArrowFunctions` is off because it cannot transform the class-field arrows in a
+      // bundled dependency (electron-store); bytecode compilation itself is unaffected.
+      bytecode: { transformArrowFunctions: false }
     }
   },
   preload: {

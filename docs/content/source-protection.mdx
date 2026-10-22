@@ -1,0 +1,92 @@
+import { Callout } from 'nextra/components'
+
+# Source Code Protection
+
+Your main process code is not shipped as readable JavaScript, and the packaged
+app refuses to run anything other than your signed code. This is on by default,
+set up in the template: there is nothing to configure and nothing to run.
+
+## What is protected
+
+<Callout>
+  Protection is about raising the cost of tampering and casual reverse
+  engineering. A determined attacker with the app on their machine can still dump
+  memory or inspect a running process: no client-side app can prevent that. Keep
+  real secrets (API keys, private endpoints) on a server, never in the app.
+</Callout>
+
+- **The main process ships as V8 bytecode.** On a production build, the whole
+  main process bundle is compiled to V8 bytecode (`out/main/index.jsc`); the
+  `index.js` left beside it is a tiny loader. Your business logic, database
+  queries and tRPC procedures are no longer plain text in the `app.asar`
+  archive.
+- **The app only runs its own code.** [Electron
+  fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) are flipped in
+  the Electron binary at packaging time to lock the app down:
+  - `onlyLoadAppFromAsar` + `enableEmbeddedAsarIntegrityValidation` — the app
+    loads only from the `app.asar` archive, whose hash is checked against the one
+    recorded at build time. A modified or swapped archive is rejected.
+  - `runAsNode`, `enableNodeOptionsEnvironmentVariable`,
+    `enableNodeCliInspectArguments` — turned off, so the packaged binary cannot
+    be relaunched as a plain Node.js runtime, fed extra `NODE_OPTIONS`, or
+    attached to with the Node inspector to read your code or data.
+  - `enableCookieEncryption` — the on-disk cookie store is encrypted with OS-level
+    keys.
+
+The renderer (your React app) is bundled and minified like any web app, but it
+is not bytecode: browser engines run JavaScript, not V8 bytecode. Keep sensitive
+logic in the main process, which is where tRPC procedures already live.
+
+## How it is wired
+
+You do not need to touch any of this; it is here so you know where it lives.
+
+- **Bytecode** — `build.bytecode` in `electron.vite.config.ts`, on the `main`
+  config. It only runs in production builds (`npm run build`, `npm run dist`),
+  never in development, so hot reload and debugging are unaffected.
+- **Fuses and ASAR integrity** — `electronFuses` in `electron-builder.ts`.
+  electron-builder flips the fuses and records the `app.asar` hash while
+  packaging (`npm run dist`).
+
+```ts filename="electron.vite.config.ts" {4-5}
+export default defineConfig({
+  main: {
+    build: {
+      // Compiles the main process to V8 bytecode in production builds
+      bytecode: { transformArrowFunctions: false }
+    }
+  }
+  // ...
+})
+```
+
+<Callout type="info">
+  `transformArrowFunctions` is disabled because the extra Babel pass it runs
+  cannot handle a class-field arrow function in one of the bundled dependencies.
+  It only affects that pre-processing step; the bytecode compilation itself is
+  unchanged.
+</Callout>
+
+## macOS signing and local builds
+
+Flipping fuses invalidates the macOS code signature, so the app is signed again
+afterwards:
+
+- **In CI**, the [release workflow](/doc/releasing) signs and notarizes with your
+  Developer ID certificate, which is what end users need.
+- **For a local unsigned build** (`npm run dist:dir`), there is no certificate,
+  so the template sets `resetAdHocDarwinSignature: true`: electron-builder
+  re-signs the app ad-hoc after flipping the fuses. Without it, an Apple Silicon
+  build would be killed by the OS on launch (`Killed: 9`). A real signature
+  simply replaces the ad-hoc one in CI.
+
+## Testing it
+
+```sh
+# Build and package locally (unsigned), then open dist/
+npm run dist:dir
+```
+
+The app in `dist/` runs the bytecode main process with the fuses applied. To
+confirm the main process is not plain JavaScript, look at `out/main`: the logic
+is in `index.jsc`, not `index.js`.

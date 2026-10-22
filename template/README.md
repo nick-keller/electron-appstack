@@ -25,6 +25,7 @@ npm run dev
 - [Biome](https://biomejs.dev/) for linting and formatting
 - [Changesets](https://github.com/changesets/changesets) for versions and changelog
 - [electron-builder](https://www.electron.build/) with GitHub Actions to build, sign, notarize and publish, and auto update
+- Source code protection: main process shipped as V8 bytecode, locked down with Electron fuses and ASAR integrity
 - `AGENTS.md` and skills in `.claude/skills/` so coding agents follow the conventions
 
 ## Scripts

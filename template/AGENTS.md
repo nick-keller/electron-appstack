@@ -11,6 +11,7 @@ Desktop app built with Electron AppStack. Read this file before changing the cod
 - **Config**: `electron-store` wrapped with a zod schema (`src/main/config`)
 - **i18n**: i18next + react-i18next, JSON files in `src/shared/locales`
 - **Tooling**: TypeScript (strict), Biome (lint + format), Changesets (versioning), electron-builder (packaging, auto update)
+- **Source protection**: production builds compile the main process to V8 bytecode and lock the app down with Electron fuses + ASAR integrity (`build.bytecode` in `electron.vite.config.ts`, `electronFuses` in `electron-builder.ts`). Do not remove either; keep sensitive logic in the main process (the renderer is not bytecode)
 
 ## Commands
 

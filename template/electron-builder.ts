@@ -33,6 +33,22 @@ const config: Configuration = {
   // Native modules cannot be loaded from inside the asar archive
   asarUnpack: ['**/*.node'],
 
+  // Electron fuses, flipped in the Electron binary at packaging time.
+  // https://www.electronjs.org/docs/latest/tutorial/fuses
+  // The app only runs the code from its signed app.asar, which is checked for tampering on
+  // launch (ASAR integrity), and cannot be started as a plain Node.js runtime or debugger.
+  electronFuses: {
+    runAsNode: false,
+    enableCookieEncryption: true,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    enableEmbeddedAsarIntegrityValidation: true,
+    onlyLoadAppFromAsar: true,
+    // Flipping fuses invalidates the macOS signature. Re-sign ad-hoc so unsigned local builds
+    // (`npm run dist:dir`) still launch on Apple Silicon; a real signature layers over it in CI.
+    resetAdHocDarwinSignature: true
+  },
+
   publish: {
     provider: 'github',
     owner: 'your-org',
