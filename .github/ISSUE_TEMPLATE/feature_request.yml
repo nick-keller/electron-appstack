@@ -1,0 +1,49 @@
+name: Improvement
+description: Suggest a feature, a better default or missing documentation
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Electron AppStack. Feature ideas, better defaults and missing documentation are all welcome.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve?
+      description: Describe what you were trying to do and what got in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What you would like to see, and how it could work.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Backend (tRPC, IPC, database)
+        - UI, routing or theming
+        - Translations
+        - Auto update
+        - Releases, code signing or notarization
+        - Source code protection
+        - Licensing
+        - AI agents (AGENTS.md, skills)
+        - Documentation
+        - Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other solutions or workarounds you considered.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to open a pull request for this

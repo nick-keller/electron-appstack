@@ -647,8 +647,8 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
       'Open an issue on GitHub with the steps to reproduce it, your platform and what you expected to happen.',
     content: (
       <>
-        Open an <a href={`${githubUrl}/issues`}>issue on GitHub</a> with the steps to reproduce it,
-        your platform and what you expected to happen.
+        Open an <a href={`${githubUrl}/issues/new?template=bug_report.yml`}>issue on GitHub</a> with
+        the steps to reproduce it, your platform and what you expected to happen.
       </>
     )
   },
@@ -658,8 +658,9 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
       'Open an issue on GitHub describing your idea and the problem it solves. Feature ideas, better defaults and missing documentation are all welcome.',
     content: (
       <>
-        Open an <a href={`${githubUrl}/issues`}>issue on GitHub</a> describing your idea and the
-        problem it solves. Feature ideas, better defaults and missing documentation are all welcome.
+        Open an <a href={`${githubUrl}/issues/new?template=feature_request.yml`}>issue on GitHub</a>{' '}
+        describing your idea and the problem it solves. Feature ideas, better defaults and missing
+        documentation are all welcome.
       </>
     )
   },
@@ -693,7 +694,8 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
       'Of course! Open an issue on GitHub with your app name, a link and a screenshot. Mention Electron AppStack on social media and your showcase gets a dofollow backlink to your website.',
     content: (
       <>
-        Of course! Open an <a href={`${githubUrl}/issues/new`}>issue on GitHub</a> with your app
+        Of course! Open an{' '}
+        <a href={`${githubUrl}/issues/new?template=showcase.yml`}>issue on GitHub</a> with your app
         name, a link and a screenshot. Mention Electron AppStack on social media and your showcase
         gets a dofollow backlink to your website.
       </>
@@ -857,7 +859,10 @@ export default function HomePage() {
           <h1 className={styles.title}>
             Production-ready <span className={styles.highlight}>Electron</span> boilerplate
           </h1>
-          <p className={styles.tagline}>Create and sell your desktop app in <span className={styles.days}>days</span>, <span className={styles.notMonths}>not months</span>.</p>
+          <p className={styles.tagline}>
+            Create and sell your desktop app in <span className={styles.days}>days</span>,{' '}
+            <span className={styles.notMonths}>not months</span>.
+          </p>
           <p className={styles.subtitle}>
             A fullstack Electron starter with React, TypeScript, tRPC and SQLite, plus everything
             you need to ship: auto update, signed releases, source code protection and license keys.

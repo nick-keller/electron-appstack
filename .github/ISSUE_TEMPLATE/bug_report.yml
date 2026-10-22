@@ -1,0 +1,86 @@
+name: Bug report
+description: Something in the template or the docs does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more precise the steps, the faster it gets fixed.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Start from a fresh copy of the template if you can.
+      placeholder: |
+        1. npx degit nick-keller/electron-appstack/template my-app
+        2. pnpm install
+        3. pnpm dev
+        4. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where does the bug happen?
+      multiple: true
+      options:
+        - macOS (arm64)
+        - macOS (x64)
+        - Windows (x64)
+        - Windows (arm64)
+        - Linux
+        - GitHub Actions (CI or release workflow)
+    validations:
+      required: true
+  - type: dropdown
+    id: context
+    attributes:
+      label: When does it happen?
+      multiple: true
+      options:
+        - In development (pnpm dev)
+        - When building or packaging
+        - In the packaged app
+        - When releasing, signing or notarizing
+        - When auto updating
+        - When activating a license
+        - In the documentation
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: OS version, Node.js version and package manager version.
+      placeholder: macOS 26.1, Node.js 24.2.0, pnpm 12.10.1
+  - type: input
+    id: template-date
+    attributes:
+      label: When did you copy the template?
+      description: An approximate date, or the commit you copied, so we know which version of the template you have.
+      placeholder: 2026-10-01
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant terminal output or error messages. Remove any API key, license key or secret.
+      render: shell
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, links or any other context.

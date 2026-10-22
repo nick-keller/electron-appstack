@@ -1,0 +1,52 @@
+name: Showcase my app
+description: You built an app with Electron AppStack and want it featured on the website
+title: "Showcase: "
+labels: [showcase]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Congrats on shipping! Mention Electron AppStack on social media and your showcase gets a dofollow backlink to your website.
+  - type: input
+    id: name
+    attributes:
+      label: App name
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Website
+      description: The link the showcase points to.
+      placeholder: https://
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: One or two sentences about what your app does.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Drag and drop a screenshot of your app.
+    validations:
+      required: true
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Platforms
+      multiple: true
+      options:
+        - macOS
+        - Windows
+        - Linux
+  - type: input
+    id: social
+    attributes:
+      label: Social media post
+      description: Link to the post where you mention Electron AppStack, to get the dofollow backlink.
+      placeholder: https://x.com/...
