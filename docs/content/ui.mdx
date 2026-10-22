@@ -1,0 +1,666 @@
+import { Callout, FileTree } from 'nextra/components'
+
+# UI and Routing
+
+The renderer is a React 19 single-page app built with Vite.
+
+| Library                                              | Used for                  |
+| ---------------------------------------------------- | ------------------------- |
+| [React](https://react.dev/)                          | UI                        |
+| [TanStack Router](https://tanstack.com/router)       | Type-safe, file-based routing |
+| [TanStack Query](https://tanstack.com/query)         | Data fetching and caching (see [IPC with tRPC](/doc/ipc)) |
+| [shadcn/ui](https://ui.shadcn.com/)                  | Components, copied into your code |
+| [class-variance-authority](https://cva.style/)       | Component variants        |
+| [Tailwind CSS v4](https://tailwindcss.com/)          | Styling                   |
+| [lucide-react](https://lucide.dev/)                  | Icons                     |
+
+## Routing
+
+[TanStack Router](https://tanstack.com/router) uses **file-based routing**: every
+file in `src/renderer/src/routes/` is a route, and its path on disk is its URL.
+The template ships with three routes:
+
+<FileTree>
+  <FileTree.Folder name="src/renderer/src" defaultOpen>
+    <FileTree.Folder name="routes" defaultOpen>
+      <FileTree.File name="__root.tsx" />
+      <FileTree.File name="index.tsx" />
+      <FileTree.File name="settings.tsx" />
+    </FileTree.Folder>
+    <FileTree.File name="routeTree.gen.ts" />
+    <FileTree.File name="main.tsx" />
+  </FileTree.Folder>
+</FileTree>
+
+| File          | URL         | Role                                                  |
+| ------------- | ----------- | ----------------------------------------------------- |
+| `__root.tsx`  | (all)       | Layout of every page: navigation, update banner       |
+| `index.tsx`   | `/`         | Home page (the todo list)                             |
+| `settings.tsx`| `/settings` | Settings page                                         |
+
+### How it works
+
+- The TanStack Router Vite plugin (configured in `electron.vite.config.ts`) watches
+  the `routes/` folder and generates `routeTree.gen.ts`, the typed tree of all
+  routes. Commit it, but never edit it.
+- `main.tsx` creates the router from that tree and registers its type, so every
+  `<Link to>`, `navigate()` and `useParams()` is checked by TypeScript: a typo in
+  a URL or a missing parameter is a compile error.
+- Each route file exports a `Route` built with `createFileRoute(path)`. It holds
+  the component to render and optional loaders, search param validation, error
+  and pending components.
+- A route renders inside its parent: `__root.tsx` renders `<Outlet />` where the
+  child page goes.
+- `autoCodeSplitting` is on: each route component is loaded in its own chunk,
+  with no extra code on your side.
+
+The router uses **hash history** (`index.html#/settings`): in production the page
+is loaded from a `file://` URL, where path-based URLs do not work. You never
+write the `#` yourself: `<Link to="/settings">` produces the right URL.
+
+### Create a page
+
+Create `src/renderer/src/routes/about.tsx`:
+
+```tsx filename="src/renderer/src/routes/about.tsx"
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/about')({
+  component: About
+})
+
+function About() {
+  return <h1>About</h1>
+}
+```
+
+<Callout>
+  With `npm run dev` running, you can also create an **empty** file: the plugin
+  fills it with this boilerplate and the right path. If you move or rename a
+  route file, the plugin updates the path string in `createFileRoute()` for you.
+</Callout>
+
+Then link to it, for example from the navigation in `__root.tsx`:
+
+```tsx
+import { Link } from '@tanstack/react-router'
+
+<Link to="/about" className="text-muted-foreground [&.active]:text-foreground">
+  About
+</Link>
+```
+
+`Link` adds the `active` class (and `data-status="active"`) when its route is the
+current one. Use `activeProps={{ className: '…' }}` for more control.
+
+To navigate from code, for example after a form is submitted:
+
+```tsx
+import { useNavigate } from '@tanstack/react-router'
+
+const navigate = useNavigate()
+navigate({ to: '/settings' })
+```
+
+The main process can ask the renderer to navigate too, for example from the
+native menu: `appEvents.emit('navigate', '/settings')`. The root layout listens
+with a tRPC subscription.
+
+### File naming conventions
+
+| File                       | URL                 | Notes                                               |
+| -------------------------- | ------------------- | --------------------------------------------------- |
+| `about.tsx`                | `/about`            |                                                     |
+| `notes/index.tsx`          | `/notes`            | `index` matches the folder itself                   |
+| `notes/$noteId.tsx`        | `/notes/:noteId`    | `$` marks a path parameter                          |
+| `notes/route.tsx`          | `/notes/*`          | Layout wrapping every route in `notes/`             |
+| `notes.$noteId.tsx`        | `/notes/:noteId`    | Flat form: a `.` is the same as a `/` folder        |
+| `_app.tsx` + `_app/home.tsx` | `/home`           | `_` prefix: layout that adds no URL segment         |
+| `(admin)/users.tsx`        | `/users`            | `(folder)`: groups files, does not change the URL   |
+| `files/$.tsx`              | `/files/*`          | Catch-all: the rest of the URL is in `params._splat` |
+| `-components/list.tsx`     | (none)              | `-` prefix: ignored, use it for colocated files     |
+
+Folders and flat files can be mixed, pick whatever is easier to read.
+
+### Nested routes and layouts
+
+Routes nest by folder. A `route.tsx` file in a folder is the **layout** of that
+folder: it renders the shared UI and an `<Outlet />` where the child route goes.
+
+<FileTree>
+  <FileTree.Folder name="routes" defaultOpen>
+    <FileTree.File name="__root.tsx" />
+    <FileTree.Folder name="notes" defaultOpen>
+      <FileTree.File name="route.tsx" />
+      <FileTree.File name="index.tsx" />
+      <FileTree.File name="$noteId.tsx" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+```tsx filename="src/renderer/src/routes/notes/route.tsx"
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/notes')({
+  component: NotesLayout
+})
+
+function NotesLayout() {
+  const notes = [{ id: '1', title: 'First note' }]
+  return (
+    <div className="flex gap-6">
+      <aside className="w-48 space-y-1">
+        {notes.map((note) => (
+          <Link key={note.id} to="/notes/$noteId" params={{ noteId: note.id }}>
+            {note.title}
+          </Link>
+        ))}
+      </aside>
+      <section className="flex-1">
+        <Outlet />
+      </section>
+    </div>
+  )
+}
+```
+
+```tsx filename="src/renderer/src/routes/notes/index.tsx"
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/notes/')({
+  component: () => <p className="text-muted-foreground">Pick a note</p>
+})
+```
+
+```tsx filename="src/renderer/src/routes/notes/$noteId.tsx"
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/notes/$noteId')({
+  component: Note
+})
+
+function Note() {
+  const { noteId } = Route.useParams() // typed: { noteId: string }
+  return <h1>Note {noteId}</h1>
+}
+```
+
+`/notes` renders `__root` → `notes/route` → `notes/index`, and `/notes/1`
+renders `__root` → `notes/route` → `notes/$noteId`. The sidebar stays mounted
+while you switch notes.
+
+Note how `Link` takes the route **pattern** in `to` and the values in `params`:
+TypeScript requires `noteId` and rejects unknown parameters.
+
+To share a layout between routes without adding a URL segment (for example an
+onboarding flow with no navigation bar), use a pathless layout: `_onboarding.tsx`
+renders the layout with an `<Outlet />`, and `_onboarding/welcome.tsx` is served
+at `/welcome`.
+
+### Loading data
+
+The `QueryClient` is passed to the router context, so a `loader` can prefetch
+data before the page renders. The component then reads it from the cache with
+`useSuspenseQuery`, which never returns `undefined`:
+
+```tsx filename="src/renderer/src/routes/index.tsx"
+export const Route = createFileRoute('/')({
+  loader: ({ context }) => context.queryClient.ensureQueryData(trpc.todos.list.queryOptions()),
+  component: Home
+})
+
+function Home() {
+  const { data: todos } = useSuspenseQuery(trpc.todos.list.queryOptions())
+  // …
+}
+```
+
+Loaders receive the route `params`, so a note page can load its note:
+
+```tsx
+export const Route = createFileRoute('/notes/$noteId')({
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(trpc.notes.get.queryOptions({ id: params.noteId })),
+  component: Note
+})
+```
+
+The router is created with `defaultPreload: 'intent'`: loaders run as soon as
+the user hovers a `Link`, so most pages open with their data already there.
+
+A route can also define:
+
+- `pendingComponent`: shown while the loader runs (after a short delay).
+- `errorComponent`: shown when the loader or the component throws.
+- `notFoundComponent`: shown when `notFound()` is thrown, for example when a
+  note does not exist.
+- `beforeLoad`: runs before the loader, for example to `throw redirect({ to: '/onboarding' })`.
+
+### Search params
+
+Search params (`?filter=done`) are validated and typed per route with
+`validateSearch`. Any schema with a `parse` method works, like the
+[Zod](https://zod.dev/) schemas used in the rest of the template:
+
+```tsx
+import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+
+const searchSchema = z.object({
+  filter: z.enum(['all', 'active', 'done']).catch('all')
+})
+
+export const Route = createFileRoute('/')({
+  validateSearch: (search) => searchSchema.parse(search),
+  component: Home
+})
+
+function Home() {
+  const { filter } = Route.useSearch() // 'all' | 'active' | 'done'
+  // …
+}
+```
+
+Change them with `<Link to="/" search={{ filter: 'done' }}>` or
+`navigate({ search: (prev) => ({ ...prev, filter: 'done' }) })`. Unlike
+`useState`, search params survive navigation (back and forward work) and
+reloads.
+
+### Going further
+
+The [TanStack Router documentation](https://tanstack.com/router/latest/docs/framework/react/overview)
+covers everything else. Useful pages:
+
+- [Routing concepts](https://tanstack.com/router/latest/docs/framework/react/routing/routing-concepts)
+  and [file naming conventions](https://tanstack.com/router/latest/docs/framework/react/routing/file-naming-conventions)
+- [Navigation](https://tanstack.com/router/latest/docs/framework/react/guide/navigation):
+  `Link`, `useNavigate`, relative links, `useBlocker` to confirm before leaving a page
+- [Data loading](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading)
+  and [external data loading](https://tanstack.com/router/latest/docs/framework/react/guide/external-data-loading)
+  (the TanStack Query pattern used here)
+- [Search params](https://tanstack.com/router/latest/docs/framework/react/guide/search-params)
+- [Not found errors](https://tanstack.com/router/latest/docs/framework/react/guide/not-found-errors)
+  and [authenticated routes](https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes)
+  (redirects in `beforeLoad`)
+- [Preloading](https://tanstack.com/router/latest/docs/framework/react/guide/preloading)
+  and [code splitting](https://tanstack.com/router/latest/docs/framework/react/guide/code-splitting)
+- [Devtools](https://tanstack.com/router/latest/docs/framework/react/devtools):
+  a panel to inspect routes, params and loader state
+
+## Components
+
+[shadcn/ui](https://ui.shadcn.com/) is not a component library you install as a
+dependency: the CLI **copies the source code** of each component into
+`src/renderer/src/components/ui/`. You own these files and edit them like the
+rest of your code. They are built on [Radix UI](https://www.radix-ui.com/)
+primitives (accessibility, keyboard navigation, focus management) and styled
+with Tailwind.
+
+The template includes button, card, checkbox, input, label, select and separator.
+Import them from `@renderer/components/ui/<name>`:
+
+```tsx
+import { Button } from '@renderer/components/ui/button'
+
+<Button variant="outline" size="sm">Cancel</Button>
+```
+
+Put your own app-specific components in `src/renderer/src/components/` (like
+`update-banner.tsx`), not in `ui/`, so that `ui/` only contains shadcn
+components.
+
+### Find a component
+
+1. Browse the [component list](https://ui.shadcn.com/docs/components). Each page
+   shows a live preview, the install command, usage code and examples (for
+   instance [Dialog](https://ui.shadcn.com/docs/components/dialog)).
+2. For bigger pieces (a full sidebar layout, a login form, a settings page), look
+   at [Blocks](https://ui.shadcn.com/blocks): ready-made compositions of several
+   components that you copy into your code.
+3. The [registry directory](https://ui.shadcn.com/docs/directory) lists
+   third-party registries that work with the same CLI.
+
+Ignore the "Manual" installation tab and framework-specific instructions (like
+Next.js): the CLI already knows this project's setup.
+
+### Add a component
+
+Run the CLI from the project root. It reads `components.json`, which tells it
+where to write the files, which aliases to use in imports and where the CSS is:
+
+```sh
+npx shadcn@latest add dialog dropdown-menu
+npm run check:fix   # format the new files with Biome
+```
+
+Run `npx shadcn@latest add` with no names to pick from the list interactively.
+
+The CLI may change several things, so review the diff before committing. For
+example, `npx shadcn@latest add sidebar` produces:
+
+```sh
+ M src/renderer/src/styles.css                  # new --sidebar-* color variables
+?? src/renderer/src/components/ui/sidebar.tsx   # the component itself
+?? src/renderer/src/components/ui/sheet.tsx     # components it depends on…
+?? src/renderer/src/components/ui/skeleton.tsx
+?? src/renderer/src/components/ui/tooltip.tsx
+?? src/renderer/src/hooks/use-mobile.ts         # a hook it uses
+```
+
+- **Component files** in `components/ui/`, including the other components it
+  uses.
+- **npm dependencies** in `package.json` when the component needs one (for
+  example `sonner` for toasts, `cmdk` for the command palette). Most components
+  only use `radix-ui`, which is already installed.
+- **CSS variables** in `styles.css` when the component has its own colors (the
+  sidebar and chart components do).
+- **Hooks** in `src/renderer/src/hooks/`.
+
+If a file already exists (button.tsx is used by many components), the CLI asks
+before overwriting it. Answer **no** if you have customized it. Some components
+also need a provider: the sidebar, for instance, needs `<TooltipProvider>`
+around the app, which you would add in `__root.tsx`. The CLI prints these
+instructions at the end.
+
+### Customize a component
+
+Since the code is yours, there are three levels of customization:
+
+**1. One usage**: pass a `className`. Components merge it with their own classes
+using `cn()` from the [`cn`](https://github.com/shadcn-ui/cn) package, which
+resolves Tailwind conflicts: the last class wins.
+
+```tsx
+<Button className="w-full rounded-full">Continue</Button> {/* replaces rounded-md */}
+```
+
+Use `cn()` in your own components too, to combine conditional classes:
+
+```tsx
+import { cn } from 'cn'
+
+<li className={cn('py-2', todo.done && 'text-muted-foreground line-through')} />
+```
+
+**2. Every usage**: edit the file in `components/ui/`. Change default classes,
+add a variant (see below), add props, change the markup. For example, to make
+every card flat, remove `shadow-sm` in `card.tsx`.
+
+**3. The whole app**: change the theme variables in `styles.css` (see
+[Theme](#theme) below) to change colors and radius everywhere at once.
+
+Components set a `data-slot` attribute on their root element (`data-slot="button"`,
+`data-slot="card-header"`…). Parents can use it to style children:
+`className="[&_[data-slot=button]]:w-full"`.
+
+### Variants with cva
+
+Components with variants, like `Button`, are written with
+[class-variance-authority](https://cva.style/) (cva). `cva()` takes the base
+classes and a map of variants, and returns a function that builds the class
+string from props:
+
+```tsx filename="src/renderer/src/components/ui/button.tsx"
+const buttonVariants = cva(
+  // Base classes, always applied
+  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium …',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        outline: 'border bg-background shadow-xs hover:bg-accent …',
+        ghost: 'hover:bg-accent hover:text-accent-foreground …'
+        // …
+      },
+      size: {
+        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        sm: 'h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5',
+        icon: 'size-9'
+        // …
+      }
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default'
+    }
+  }
+)
+
+buttonVariants({ variant: 'outline', size: 'sm' })
+// → 'inline-flex … border bg-background … h-8 gap-1.5 …'
+```
+
+`VariantProps<typeof buttonVariants>` turns the variants into typed props, so
+`<Button variant="outlne">` is a TypeScript error.
+
+To add a variant, add a key to the map. It is immediately available, and typed:
+
+```tsx
+variant: {
+  // …
+  success: 'bg-success text-success-foreground hover:bg-success/90'
+}
+```
+
+```tsx
+<Button variant="success">Saved</Button>
+```
+
+(`bg-success` needs a `success` color, see [Add a color](#add-a-color).)
+
+cva also supports **compound variants**, classes applied only when several
+variants match:
+
+```tsx
+compoundVariants: [{ variant: 'outline', size: 'sm', class: 'border-2' }]
+```
+
+`buttonVariants` is exported, so you can give the button style to something that
+is not a `<button>`. You can also use `asChild`, which renders the child element
+with the button's classes and props:
+
+```tsx
+import { Link } from '@tanstack/react-router'
+
+<Link to="/settings" className={buttonVariants({ variant: 'outline' })}>Settings</Link>
+{/* or */}
+<Button asChild variant="outline">
+  <Link to="/settings">Settings</Link>
+</Button>
+```
+
+Learn more in the cva documentation:
+[variants](https://cva.style/docs/getting-started/variants),
+[compound variants](https://cva.style/docs/getting-started/variants#compound-variants),
+[TypeScript](https://cva.style/docs/getting-started/typescript) and
+[composing components](https://cva.style/docs/getting-started/composing-components).
+
+## Theme
+
+All the colors and the radius of the app are CSS variables in
+`src/renderer/src/styles.css`, which has four parts:
+
+```css filename="src/renderer/src/styles.css"
+@import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+/* 1. Light theme values */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  /* … */
+}
+
+/* 2. Dark theme values: same names, different values */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  /* … */
+}
+
+/* 3. Expose the variables to Tailwind */
+@theme inline {
+  --radius-lg: var(--radius);
+  --color-background: var(--background);
+  --color-primary: var(--primary);
+  /* … */
+}
+
+/* 4. Global styles */
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+```
+
+1. **`:root`** defines the light theme.
+2. **`.dark`** overrides the same variables when the `<html>` element has the
+   `dark` class (see [Dark Mode](/doc/theming)). The `@custom-variant` line
+   makes Tailwind's `dark:` prefix use that class too.
+3. **`@theme inline`** creates Tailwind utilities. In Tailwind v4, any
+   `--color-<name>` in `@theme` generates `bg-<name>`, `text-<name>`,
+   `border-<name>`, `ring-<name>`… So `--color-primary: var(--primary)` is what
+   makes `bg-primary` exist. `inline` makes the utility use `var(--primary)`
+   directly, so it follows the `.dark` override.
+4. **`@layer base`** applies the theme to the page: default border color, body
+   background and text color.
+
+### Naming convention
+
+Colors come in pairs: `<name>` is a background and `<name>-foreground` is the
+text color to use on it. Always use them together, so the text stays readable
+in both themes.
+
+| Variable                         | Used for                                              |
+| -------------------------------- | ----------------------------------------------------- |
+| `background` / `foreground`      | Page background and default text                      |
+| `card`, `popover`                | Surfaces of cards, and of menus, selects, dialogs     |
+| `primary`                        | Main actions (default button, checked checkbox)       |
+| `secondary`                      | Less important actions                                |
+| `muted`                          | Subtle backgrounds; `muted-foreground` for secondary text |
+| `accent`                         | Hover and focus state of items (menus, ghost buttons) |
+| `destructive`                    | Dangerous actions and errors                          |
+| `border`, `input`, `ring`        | Borders, input borders, focus ring                    |
+
+Colors use the [OKLCH](https://oklch.com/) format: `oklch(lightness chroma hue)`.
+Lightness goes from 0 (black) to 1 (white), chroma is the color intensity (0 is
+gray) and hue is the angle on the color wheel. The template's palette is
+neutral, so every color has a chroma of 0. Tailwind opacity modifiers work on
+all theme colors: `bg-primary/10`, `border-destructive/50`.
+
+### Customize existing colors
+
+Change the values in `:root` and `.dark`. For example, a blue primary color:
+
+```css filename="src/renderer/src/styles.css"
+:root {
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.546 0.245 262.881);
+}
+
+.dark {
+  --primary: oklch(0.623 0.214 259.815);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.623 0.214 259.815);
+}
+```
+
+Every component using `primary` (buttons, checkboxes, focus rings…) changes at
+once. To change the whole palette, pick one in the
+[shadcn/ui theme page](https://ui.shadcn.com/themes) or design one with
+[tweakcn](https://tweakcn.com/), copy the generated `:root` and `.dark` blocks,
+and paste them over the existing ones. Keep the variable names: components
+depend on them.
+
+### Add a color
+
+To add a `success` color, define it in all three places:
+
+```css filename="src/renderer/src/styles.css"
+:root {
+  /* … */
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(0.985 0 0);
+}
+
+.dark {
+  /* … */
+  --success: oklch(0.723 0.219 149.579);
+  --success-foreground: oklch(0.145 0 0);
+}
+
+@theme inline {
+  /* … */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+}
+```
+
+`bg-success`, `text-success-foreground`, `border-success`, `bg-success/10`… now
+exist, adapt to dark mode and autocomplete in your editor (with the
+[Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
+extension).
+
+<Callout>
+  Tailwind's default palette is still available (`bg-green-600`,
+  `text-zinc-500`…), but these colors do not change in dark mode. Prefer theme
+  colors, and use `dark:` for one-off cases: `bg-green-100 dark:bg-green-900`.
+</Callout>
+
+### Radius
+
+`--radius` is the base radius. The Tailwind radius utilities are derived from it
+in `@theme inline`:
+
+| Class        | Value                      |
+| ------------ | -------------------------- |
+| `rounded-sm` | `calc(var(--radius) - 4px)` |
+| `rounded-md` | `calc(var(--radius) - 2px)` |
+| `rounded-lg` | `var(--radius)`            |
+| `rounded-xl` | `calc(var(--radius) + 4px)` |
+
+Change `--radius` in `:root` to make every component rounder (`1rem`) or sharper
+(`0.25rem`, or `0` for square corners) at once.
+
+### Fonts and other tokens
+
+The same mechanism works for anything Tailwind has a theme namespace for. For
+example, to use a custom font with `font-sans` (the body uses `system-ui` by
+default, which matches the OS):
+
+```css filename="src/renderer/src/styles.css"
+@theme inline {
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+}
+```
+
+Bundle the font file with the app (see [Icons and Images](/doc/assets)) rather
+than loading it from the internet, so the app works offline.
+
+### Going further
+
+- [shadcn/ui theming](https://ui.shadcn.com/docs/theming): the list of
+  variables, including the `chart-*` and `sidebar-*` ones added by those
+  components
+- [shadcn/ui with Tailwind v4](https://ui.shadcn.com/docs/tailwind-v4)
+- [Tailwind theme variables](https://tailwindcss.com/docs/theme): every
+  namespace (`--color-*`, `--font-*`, `--radius-*`, `--shadow-*`, `--breakpoint-*`…)
+- [Tailwind colors](https://tailwindcss.com/docs/colors) and
+  [dark mode](https://tailwindcss.com/docs/dark-mode)
+
+## Native feel
+
+`styles.css` disables text selection outside of inputs and the rubber-band
+scroll effect, which feels closer to a native app. Remove these rules if you
+prefer the browser behavior.

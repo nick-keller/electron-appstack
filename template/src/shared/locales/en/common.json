@@ -1,0 +1,38 @@
+{
+  "appName": "Electron App",
+  "nav": {
+    "home": "Home",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "Todos",
+    "description": "Stored in a local SQLite database with Drizzle ORM.",
+    "placeholder": "What needs to be done?",
+    "add": "Add",
+    "empty": "Nothing to do yet.",
+    "delete": "Delete",
+    "remaining_one": "{{count}} item left",
+    "remaining_other": "{{count}} items left"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Saved in the app config file with electron-store.",
+    "theme": "Theme",
+    "language": "Language",
+    "versions": "Versions"
+  },
+  "theme": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "system": "System",
+    "en": "English",
+    "fr": "Français"
+  },
+  "update": {
+    "downloaded": "Version {{version}} is ready to install.",
+    "restart": "Restart"
+  }
+}

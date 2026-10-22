@@ -1,0 +1,10 @@
+/* Slightly larger body text with more generous line height */
+article main {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+
+article main p,
+article main li {
+  line-height: 1.8;
+}

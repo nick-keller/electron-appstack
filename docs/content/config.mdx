@@ -1,0 +1,107 @@
+# App Config
+
+Small settings and preferences are stored in a JSON file with
+[electron-store](https://github.com/sindresorhus/electron-store), wrapped so that
+every value is typed and validated by a [zod](https://zod.dev/) schema.
+
+Use it for preferences (theme, language, window size…). Use the
+[database](/doc/database) for lists and larger data.
+
+## Schema
+
+The schema lives in `src/shared/config.ts`, so the renderer gets the types too.
+**Every key needs a default.**
+
+```ts filename="src/shared/config.ts"
+export const configSchema = z.object({
+  theme: themeSchema.default('system'),
+  language: languageSettingSchema.default('system'),
+  windowBounds: windowBoundsSchema.default({ width: 1000, height: 700, maximized: false })
+})
+```
+
+The file is `config.json` in the user data folder.
+
+## Usage in the main process
+
+```ts
+import { config } from './config'
+
+config.get('theme') // 'system' | 'light' | 'dark'
+config.set('theme', 'dark') // validated, throws if invalid
+config.reset('theme') // back to the default
+config.getAll()
+
+const unsubscribe = config.onChange('theme', (value, previous) => {})
+config.onAnyChange((all) => {})
+```
+
+`createTypedStore(schema)` (`src/main/config/typed-store.ts`) does the work:
+
+- Defaults come from the schema (`schema.parse({})`): a key without default fails at startup.
+- Values are validated with zod on `set`.
+- On load, invalid values (a corrupted file, or a schema that changed between
+  versions) are reset to their default instead of crashing the app, and valid
+  values are kept.
+- Values are cached in memory: `get` never reads the disk.
+
+Create other stores with their own file:
+`createTypedStore(schema, { name: 'session' })`.
+
+## Usage in the renderer
+
+The `config` tRPC router exposes the config:
+
+```tsx
+const { data: config } = useSuspenseQuery(trpc.config.get.queryOptions())
+const setTheme = useMutation(trpc.config.setTheme.mutationOptions())
+```
+
+Writes go through one mutation per key, so each one has its own validation and
+permission. Add one to `src/main/trpc/routers/config.ts` for each setting the
+renderer can change.
+
+Every change, from the renderer or from the main process (for example the
+native menu), is pushed to the renderer by the `config.onChange` subscription,
+which updates the query cache: the UI is always in sync.
+
+## What happens on update
+
+An update replaces the application but never touches the user data folder:
+`config.json` stays where it is, written by an older version that may not
+know about the new schema. There are no [migrations](/doc/database#migrations)
+for the config: the schema itself, with its defaults, decides how an old file
+is read on the first launch of the new version.
+
+- **New setting** – the key is missing from the file, so the schema gives it
+  its default. The user gets the new setting as if it had always been there,
+  nothing to write.
+- **Setting no longer used** – the key is still in the file, but `z.object()`
+  strips unknown keys when parsing: the app never sees it. It stays in the file
+  until the file is rewritten, which is harmless.
+- **Setting with a new type or allowed values** – for example an option
+  removed from an enum. The stored value no longer matches, so only this key is
+  reset to its default, the other settings are kept.
+- **Renamed setting** – for the store, this is a removed key plus a new key:
+  the user loses their value and gets the default. Keep the old name if the
+  value matters.
+
+This is why **every key needs a default**: it is the value used on first
+launch, for every setting added later, and for every stored value that is no
+longer valid. A key without default would leave the app with no value at all
+for users updating from an older version, so `createTypedStore` refuses it at
+startup.
+
+Defaults also decide what users who never touched a setting get. Only the
+values they change are written to the file, so changing a default in a new
+version usually applies to everyone who kept the previous one. (When a load
+resets an invalid value, the whole config is written back, defaults included,
+and those users keep the old default.) Choose defaults that
+are a good experience on their own: most users never open the settings.
+
+## Window state
+
+The template stores the main window size, position and maximized state in
+`windowBounds` when the window closes, and restores it on the next launch. If
+the saved position is on a display that is no longer connected, the window opens
+centered.

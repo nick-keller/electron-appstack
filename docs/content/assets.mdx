@@ -1,0 +1,96 @@
+# Icons and Images
+
+Files are split by who uses them:
+
+| Folder                       | Used by           | Shipped in the app | Examples                            |
+| ---------------------------- | ----------------- | ------------------ | ----------------------------------- |
+| `build/`                     | electron-builder  | No (only the generated icons) | App icon, DMG background, entitlements |
+| `resources/`                 | Main process      | Yes, next to the app | Tray icons, window icon on Linux, sounds |
+| `src/renderer/public/`       | Renderer          | Yes, as-is         | Images referenced by URL            |
+| `src/renderer/src/assets/`   | Renderer          | Yes, bundled       | Images imported in code             |
+
+## App icon
+
+Put a single **1024×1024 PNG** at `build/icon.png`. electron-builder generates
+the macOS `.icns`, the Windows `.ico` and the Linux icons from it.
+
+On macOS, follow the [Apple grid](https://developer.apple.com/design/human-interface-guidelines/app-icons):
+draw the artwork in a **824×824 rounded square centered** in the 1024×1024
+canvas, with a transparent margin. A full-bleed square looks too big in the Dock.
+
+To fine-tune each platform, add optional files next to it:
+
+| File                         | Size                    | Platform |
+| ---------------------------- | ----------------------- | -------- |
+| `build/icon.png`             | 1024×1024               | All (source) |
+| `build/icon.icns`            | multi-size              | macOS, replaces the generated one |
+| `build/icon.ico`             | 256×256, multi-size     | Windows, replaces the generated one |
+| `build/icons/<size>x<size>.png` | 16, 32, 48, 64, 128, 256, 512 | Linux, e.g. `build/icons/256x256.png` |
+| `build/installerIcon.ico`    | 256×256                 | Windows installer |
+| `build/uninstallerIcon.ico`  | 256×256                 | Windows uninstaller |
+
+During development the app runs inside the Electron binary, so the Dock and
+taskbar show the Electron icon. On Linux, the window icon is set from
+`resources/icon.png`.
+
+## DMG background
+
+The macOS disk image shows a background behind the app icon and the
+Applications shortcut:
+
+| File                       | Size      |
+| -------------------------- | --------- |
+| `build/background.png`     | 540×380   |
+| `build/background@2x.png`  | 1080×760 (Retina) |
+
+The layout is set in `electron-builder.ts`: the app icon is at (130, 190), the
+Applications link at (410, 190), with 96 px icons. If you change the image size,
+update `dmg.window` and the positions. Leave the area under the icons plain:
+the file names are drawn below them.
+
+## Runtime resources
+
+Files the main process needs at runtime go in `resources/`. electron-builder
+copies the folder next to the app (`extraResources`). Get their path with
+`resourcePath()`, which works in development and production:
+
+```ts
+import { Tray } from 'electron'
+import { resourcePath } from './paths'
+
+const tray = new Tray(resourcePath('trayTemplate.png'))
+```
+
+macOS tray icons should be
+[template images](https://www.electronjs.org/docs/latest/api/native-image#template-image-macos):
+black and transparent, named `*Template.png`, 16×16 with a `@2x` version.
+
+## Images in the renderer
+
+**Static images** go in `src/renderer/public/images/`. They are copied as-is
+and keep their file name. Reference them with `publicUrl()`:
+
+```tsx
+import { publicUrl } from '@renderer/lib/public-url'
+
+<img src={publicUrl('images/logo.svg')} alt="" />
+```
+
+Do not write `/images/logo.svg`: in production the page is loaded from a
+`file://` URL, where a leading slash points to the root of the disk.
+`publicUrl()` builds the right relative URL in development and production.
+
+**Imported images** go in `src/renderer/src/assets/`. Vite bundles them with a
+hashed file name, and unused images are left out:
+
+```tsx
+import logo from '@renderer/assets/logo.png'
+
+<img src={logo} alt="" />
+```
+
+Prefer imports for images used by components, and `public/images/` for images
+whose name comes from data (a database row, a translation, a config value).
+
+The Content Security Policy in `src/renderer/index.html` allows images from the
+app itself and `data:` URLs. Add sources to `img-src` to load remote images.

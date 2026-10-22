@@ -1,0 +1,686 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Releasing
+
+Releases are automated with [Changesets](https://github.com/changesets/changesets),
+[electron-builder](https://www.electron.build/) and GitHub Actions. Merging a
+pull request is enough to build, sign, notarize and publish a new version on
+macOS, Windows and Linux.
+
+## Workflow
+
+<Callout>
+  When you work with an [AI agent](/doc/ai-agents), you do not have to do this by
+  hand. `AGENTS.md` tells the agent to add a changeset with every user-facing
+  change, so all that is left for you is merging the pull requests.
+</Callout>
+
+<Steps>
+
+### Describe your changes
+
+With each user-facing change, add a changeset:
+
+```sh
+npm run changeset
+```
+
+Pick the bump type (`patch` for fixes, `minor` for features, `major` for
+breaking changes) and write a summary for users. It creates a Markdown file in
+`.changeset/`; commit it with your code.
+
+```md filename=".changeset/brave-lions-dance.md"
+---
+"electron-app": minor
+---
+
+Add a dark mode to the settings page.
+```
+
+### Merge to main
+
+On every push to `main`, the **Release** workflow
+(`.github/workflows/release.yml`) opens or updates a **Version Packages** pull
+request. It removes the changesets, bumps `version` in `package.json` and adds
+their summaries to `CHANGELOG.md`.
+
+### Merge the Version Packages pull request
+
+The workflow sees that the new version has no git tag yet, so it:
+
+1. Tags the commit `v<version>` and creates a draft GitHub release
+2. Builds the app on macOS, Windows and Linux in parallel, signs and notarizes it
+   when the secrets are set, and uploads the installers and update files to the
+   draft release
+3. Publishes the release, with the changelog section as release notes
+
+Installed apps find the new version through the [auto updater](/doc/auto-update).
+
+</Steps>
+
+<Callout>
+  The first push to `main` releases the initial version (`0.1.0`), since it has no
+  tag yet. Change `version` in `package.json` before if needed.
+</Callout>
+
+Never edit `version` or `CHANGELOG.md` by hand: Changesets owns them.
+
+## Build outputs
+
+Configured in `electron-builder.ts`:
+
+| Platform | Targets                       | Architectures |
+| -------- | ----------------------------- | ------------- |
+| macOS    | `dmg`, `zip` (for updates)    | arm64, x64    |
+| Windows  | `nsis` installer              | x64, arm64    |
+| Linux    | `AppImage`, `deb`             | x64           |
+
+Build locally for the current platform with `npm run dist` (or `npm run dist:dir`
+for an unpacked app, faster to test). Local builds are not signed unless the
+environment variables below are set.
+
+## Costs
+
+Everything is optional: without any paid account, the workflow still publishes
+unsigned builds. Prices in USD, as of October 2026; check the linked pages for
+current prices.
+
+| Service | Price | Needed for |
+| ------- | ----- | ---------- |
+| [Apple Developer Program](https://developer.apple.com/programs/enroll/) | 99 USD per year (shown in local currency during enrollment). [Fee waiver](https://developer.apple.com/help/account/membership/fee-waivers/) for nonprofits, accredited educational institutions and government entities | Signing and notarizing the macOS app |
+| [Azure Artifact Signing](https://azure.microsoft.com/pricing/details/artifact-signing/) Basic | 9.99 USD per month, including 5,000 signatures, then 0.005 USD per signature. Not prorated | Signing the Windows app |
+| Azure Artifact Signing Premium | 99.99 USD per month, 100,000 signatures | Not needed: a release uses a few dozen signatures at most |
+| D-U-N-S number | Free | Apple enrollment as an organization |
+| [GitHub Actions](https://docs.github.com/billing/concepts/product-billing/github-actions) | Free for public repositories. Private repositories include 2,000 minutes per month (Free plan) or 3,000 (Pro, Team), then 0.006 USD per minute on Linux, 0.010 on Windows and 0.062 on macOS | Building the app |
+
+A release takes roughly 10 to 25 minutes per platform, macOS being the longest
+because of notarization. For a private repository, expect a dollar or two per
+release once the included minutes are used up.
+
+## Set up the GitHub repository
+
+Do these steps **before your first push**: the first push to `main` already
+publishes a release, so the repository and the secrets must be ready.
+
+<Steps>
+
+### Create the repository
+
+On GitHub, create a new repository **without** a README, `.gitignore` or
+license, so your first push does not conflict with an existing commit. The
+default branch must be named `main` (see
+[edge cases](#the-default-branch-is-not-main) otherwise).
+
+Public or private? The [auto updater](/doc/auto-update) downloads updates from
+GitHub releases without authentication, so it only works with a **public**
+repository. For a private codebase, see
+[private repositories](#private-repositories).
+
+### Set your app identity
+
+Before the first release, replace the placeholders. Some of them are hard to
+change once users have installed the app.
+
+| File | Field | Value |
+| ---- | ----- | ----- |
+| `package.json` | `name` | Package name, lowercase with dashes. Also used in changeset files |
+| `package.json` | `productName` | Display name of the app and of its installers |
+| `package.json` | `version` | First version to publish (`0.1.0` by default) |
+| `electron-builder.ts` | `appId` | Reverse domain identifier, e.g. `com.acme.notes`. **Do not change it after the first release**: macOS and Windows treat a new `appId` as a different app, and the user data folder is lost |
+| `electron-builder.ts` | `publish.owner`, `publish.repo` | Your GitHub user or organization, and the repository name. Installed apps look for updates there, so a typo means no updates |
+| `electron-builder.ts` | `copyright`, `linux.maintainer` | Your name or company |
+
+If you rename the package after adding changesets, update the package name in
+the files of `.changeset/` too, or the workflow fails with
+`Found changeset for package ... which is not in the workspace`.
+
+### Allow GitHub Actions to open pull requests
+
+In the repository, go to **Settings → Actions → General**:
+
+- Under **Actions permissions**, keep **Allow all actions and reusable
+  workflows** (or see [restricted actions](#actions-are-restricted-by-the-organization)).
+- Under **Workflow permissions**, check **Allow GitHub Actions to create and
+  approve pull requests**, then **Save**.
+
+The workflow declares the permissions it needs (`contents: write`,
+`pull-requests: write`), so the **Read repository contents** default is fine.
+
+### Add the signing secrets
+
+Optional, see [code signing](#code-signing). Go to **Settings → Secrets and
+variables → Actions**, which has two tabs:
+
+- **Secrets**: encrypted, hidden in logs. Use **New repository secret**.
+- **Variables**: plain values. Use **New repository variable**.
+
+Put each value in the tab given in the tables below: the workflow reads
+`secrets.*` and `vars.*` separately, and a value in the wrong tab is seen as
+empty.
+
+### Push
+
+```sh
+git remote add origin git@github.com:your-org/your-app.git
+git push -u origin main
+```
+
+### Check the first release
+
+Open the **Actions** tab: the **Release** workflow tags `v0.1.0`, builds the
+three platforms and publishes the release. Then open **Releases**: it should
+list the `.dmg`, `.zip`, `.exe`, `.AppImage` and `.deb` files, and the
+`latest*.yml` update files.
+
+Download the installers and open them on each platform. A signed app opens
+without a security warning on macOS. On Windows, see
+[SmartScreen](#smartscreen-still-shows-a-warning).
+
+</Steps>
+
+### Edge cases
+
+#### The default branch is not `main`
+
+The workflows and Changesets expect `main`. Either rename the branch in
+**Settings → General → Default branch** (GitHub redirects the old name), or
+replace `main` in `.github/workflows/release.yml`, `.github/workflows/ci.yml`
+and `baseBranch` in `.changeset/config.json`.
+
+#### The pull request setting is grayed out
+
+In an organization, the **Allow GitHub Actions to create and approve pull
+requests** setting can be locked by the organization. An organization owner must
+enable it first in the organization's **Settings → Actions → General**, then
+you can enable it in the repository.
+
+Without it, the release workflow fails with
+`GitHub Actions is not permitted to create or approve pull requests`.
+
+#### Actions are restricted by the organization
+
+If the organization only allows some actions, ask an owner to allow
+`actions/checkout`, `actions/setup-node` (created by GitHub) and
+`changesets/action`. Otherwise, the workflow fails before running any step.
+
+#### Checks do not run on the Version Packages pull request
+
+The pull request is opened by the workflow with the `GITHUB_TOKEN`. To prevent
+loops, GitHub does not run other workflows freely for it: the CI checks wait for
+approval, or do not start. If a branch protection rule or ruleset requires the CI
+checks on `main`, the pull request cannot be merged until they pass. Either:
+
+- select **Approve workflows to run** on the pull request, if GitHub offers it,
+- or close the pull request and reopen it: since you reopened it, the checks
+  run,
+- or exempt the pull request, for example by allowing administrators to bypass
+  the rule.
+
+The Version Packages commits are pushed to the `changeset-release/main` branch,
+never directly to `main`, so a rule requiring pull requests on `main` is fine.
+
+#### Tags are protected
+
+The workflow pushes a `v<version>` tag. If a ruleset restricts the creation of
+tags matching `v*`, add **GitHub Actions** (or the repository admin role) to its
+bypass list, or the workflow fails at the **Tag the version if needed** step.
+
+#### No Version Packages pull request
+
+The pull request is only opened when `.changeset/` contains at least one
+changeset. Check that the changeset was committed (not only created locally),
+and that its frontmatter uses the `name` of `package.json`.
+
+#### A release failed halfway
+
+When a build fails (an expired secret, a notarization error…), the tag and the
+draft release already exist. Depending on the cause:
+
+- **Temporary error** (network, Apple service down): open the workflow run and
+  select **Re-run failed jobs**. Do not use **Re-run all jobs**: the first job
+  would see that the tag exists and skip the build.
+- **Wrong secret**: fix the secret, then **Re-run failed jobs**.
+- **The code must change**: delete the draft release and the tag, then push the
+  fix to `main`. The workflow tags the new commit and builds again.
+
+  ```sh
+  gh release delete v1.2.0 --yes
+  git push --delete origin v1.2.0
+  git tag --delete v1.2.0
+  ```
+
+A draft release is invisible to the auto updater, so users never receive a
+partial release.
+
+#### Private repositories
+
+A private repository works for building, with two limits: GitHub Actions minutes
+are [billed](#costs), and the auto updater cannot read private releases. To keep
+the code private and auto update working, publish the releases to a second,
+**public** repository that only contains releases:
+
+1. Create the public repository (for example `your-app-releases`) **with** a
+   README: a release cannot be created in an empty repository.
+2. Create a
+   [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new)
+   with access to this repository only, and the **Contents: Read and write**
+   permission. Add it as the `RELEASES_TOKEN` secret of the private repository.
+   Tokens expire: note the date.
+3. In `electron-builder.ts`, set `publish.repo` to the public repository.
+4. In `.github/workflows/release.yml`, use this token for releases: replace
+   `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` with
+   `GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}` in the **Tag the version if needed**,
+   **Build, sign and publish** and **Publish the release** steps, and add
+   `--repo your-org/your-app-releases` to the `gh release create` and
+   `gh release edit` commands. Keep `GITHUB_TOKEN` for the Changesets step and
+   the `git push` of the tag, which target the private repository.
+
+Another option is to publish to a server or bucket you own
+([S3, a generic server…](https://www.electron.build/publish)).
+
+#### Forks
+
+Forks of a public repository also get the workflow. Actions are disabled by
+default in forks; if a fork enables them, its release builds are unsigned, since
+secrets are not copied to forks.
+
+## Code signing
+
+Signing proves who published the app and that it was not modified. It is
+optional, but unsigned apps are hard to open:
+
+- **macOS**: Gatekeeper blocks the app. On Apple Silicon, a downloaded unsigned
+  app is reported as **damaged**; users have to run
+  `xattr -cr "/Applications/Your App.app"` or allow it in **System Settings →
+  Privacy & Security → Open Anyway**. Auto update does not work either.
+- **Windows**: SmartScreen shows **Windows protected your PC**, and users have
+  to click **More info → Run anyway**.
+
+Plan ahead: the Apple enrollment takes from a day to a few weeks, and the
+Microsoft identity validation from one to twenty business days.
+
+### macOS: signing and notarization
+
+You need an Apple Developer Program membership (99 USD per year), a
+**Developer ID Application** certificate to sign the app, and an **App Store
+Connect API key** to notarize it (Apple scans the app and approves it). Both
+are free once you are a member. A Mac makes the certificate easier to create,
+but is [not required](#without-a-mac).
+
+<Steps>
+
+#### Create an Apple Account with two-factor authentication
+
+Use an existing [Apple Account](https://account.apple.com) or create one. Turn on
+two-factor authentication, which is required to enroll. For a company, use a
+work email on the company's domain: the account becomes the **Account Holder**,
+the only one who can create Developer ID certificates.
+
+#### Choose individual or organization
+
+The name of the membership is shown to users when they open the app
+("Developer ID Application: **Jane Doe**") and cannot be changed later. As an
+individual, it is your legal name; as an organization, the company name.
+
+- **Individual**: enroll with your legal first and last name (no nickname or
+  company name, which delays the approval) and a street address (no P.O. box).
+- **Organization**: the company must be a legal entity (no DBA, trade name or
+  branch), with a public website on its own domain. You must have the legal
+  authority to bind the company to agreements. You also need a
+  [D-U-N-S number](https://developer.apple.com/enroll/duns-lookup/), a free
+  business identifier from Dun & Bradstreet: look up your company first, as it
+  may already have one. If not, request it from the same page; it takes up to
+  5 business days, sometimes more. The legal name and address must match
+  exactly what Dun & Bradstreet has, or the enrollment is delayed.
+
+#### Enroll
+
+Enroll on the [Apple Developer website](https://developer.apple.com/programs/enroll/),
+or in the **Apple Developer** app on an iPhone, iPad or Mac, which is faster
+for individuals (identity check with a photo ID). Pay the fee, or request a fee
+waiver if eligible.
+
+Apple reviews the enrollment. Individuals are usually approved within a day or
+two; organizations can take a few weeks, and Apple may call to verify that you
+can sign for the company. Once approved, accept the **Apple Developer Program
+License Agreement** in your [account](https://developer.apple.com/account).
+
+#### Create a certificate signing request
+
+On a Mac, open **Keychain Access** (on macOS 15 and later, it is no longer in
+**Utilities**: search for it with Spotlight, or run
+`open -a "Keychain Access"`). In the menu bar, choose **Keychain Access →
+Certificate Assistant → Request a Certificate From a Certificate Authority**.
+Enter your email and name, leave **CA Email Address** empty, select **Saved to
+disk**, and save the `CertificateSigningRequest.certSigningRequest` file.
+
+This also creates a private key in your login keychain. The certificate only
+works with this key, so create the request on the Mac where you will export the
+certificate.
+
+#### Create the Developer ID Application certificate
+
+Signed in as the Account Holder, open
+[Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/certificates/list),
+click **+**, select **Developer ID Application** (not **Developer ID
+Installer**, used for `.pkg` files, nor **Apple Development**), and click
+**Continue**. Keep the **G2 Sub-CA** profile type, upload the signing request,
+then **Continue** and **Download**.
+
+Double-click the downloaded `developerID_application.cer` to add it to your
+login keychain. Check that it is usable:
+
+```sh
+security find-identity -v -p codesigning
+# 1) 4F2A… "Developer ID Application: Jane Doe (A1B2C3D4E5)"
+```
+
+The certificate is valid for 5 years, and an account can have up to 5
+Developer ID Application certificates. Apps signed and notarized before the
+expiration keep working after it.
+
+#### Export the certificate as .p12
+
+In Keychain Access, select the **login** keychain and the **My Certificates**
+tab. Find **Developer ID Application: …** and expand it: it must contain a
+private key. Right-click the certificate (not the key), select **Export**,
+choose the **Personal Information Exchange (.p12)** format and set a password.
+
+Copy the file as base64 for the secret:
+
+```sh
+base64 -i Certificates.p12 | pbcopy
+```
+
+If the certificate is not under **My Certificates**, or **.p12** is grayed out,
+the private key is missing: the signing request was created on another Mac or
+user account. Export from there, or revoke the certificate and start again from
+the signing request.
+
+#### Create an App Store Connect API key
+
+In [App Store Connect](https://appstoreconnect.apple.com), go to **Users and
+Access → Integrations → App Store Connect API**. The first time, the Account
+Holder must click **Request Access** and accept the terms. Apple reviews the
+request, which can take a moment: reload the page until the keys appear.
+
+Under **Team Keys**, click **Generate API Key** (or **+**), name it (e.g.
+"GitHub Actions"), select the **Developer** access and click **Generate**. Then:
+
+- note the **Key ID** in the list of keys,
+- note the **Issuer ID**, shown above the list,
+- click **Download API Key** to get `AuthKey_<KEY ID>.p8`. It can only be
+  downloaded **once**: keep it in a password manager.
+
+Copy the file as base64 for the secret:
+
+```sh
+base64 -i AuthKey_ABCDE12345.p8 | pbcopy
+```
+
+Use a team key, not an individual key (from your user profile): the workflow
+sends the issuer ID, which individual keys reject with `401 Unauthorized`.
+
+#### Add the secrets
+
+In **Settings → Secrets and variables → Actions → Secrets**:
+
+| Secret                  | Value |
+| ----------------------- | ----- |
+| `MAC_CSC_LINK`          | The `.p12` file in base64 |
+| `MAC_CSC_KEY_PASSWORD`  | The password of the `.p12` file |
+| `APPLE_API_KEY_BASE64`  | The `.p8` file in base64 |
+| `APPLE_API_KEY_ID`      | The key ID |
+| `APPLE_API_ISSUER`      | The issuer ID |
+
+Then delete the `.p12` and `.p8` files from your downloads, or move them to a
+password manager.
+
+</Steps>
+
+The app is signed with the hardened runtime and the entitlements in
+`build/entitlements.mac.plist`, then notarized by Apple. Notarization is enabled
+only when `APPLE_API_KEY_ID` is set.
+
+To check a downloaded build, run:
+
+```sh
+spctl --assess --type execute --verbose "/Applications/Your App.app"
+# /Applications/Your App.app: accepted
+# source=Notarized Developer ID
+```
+
+#### Without a Mac
+
+Create the signing request and the `.p12` file with OpenSSL instead of Keychain
+Access:
+
+```sh
+# 1. Private key and signing request, to upload instead of the Keychain Access one
+openssl req -new -newkey rsa:2048 -nodes \
+  -keyout developer-id.key -out developer-id.csr \
+  -subj "/emailAddress=you@example.com/CN=Jane Doe/C=US"
+
+# 2. After downloading developerID_application.cer from Apple
+openssl x509 -inform DER -in developerID_application.cer -out developer-id.pem
+openssl pkcs12 -export -legacy \
+  -inkey developer-id.key -in developer-id.pem -out developer-id.p12
+```
+
+`-legacy` (OpenSSL 3) uses the encryption that macOS can import; without it, the
+macOS build fails to import the certificate. Then encode it with
+`base64 -w0 developer-id.p12` (Linux) or
+`[Convert]::ToBase64String([IO.File]::ReadAllBytes("developer-id.p12"))`
+(PowerShell).
+
+#### macOS troubleshooting
+
+- **`A required agreement is missing or has expired`**: Apple published a new
+  version of the program license agreement. The Account Holder must accept it in
+  the [developer account](https://developer.apple.com/account), then re-run the
+  failed job. It happens a few times per year.
+- **Notarization takes a long time**: it usually takes a few minutes, but the
+  first submissions of a new account, or days of Apple outages, can take hours.
+  Check [Apple's system status](https://developer.apple.com/system-status/).
+- **The membership expired**: published apps keep working, but you cannot
+  notarize new versions until you renew.
+- **`security: SecKeychainItemImport: MAC verification failed`**: wrong
+  `MAC_CSC_KEY_PASSWORD`, or a `.p12` exported by OpenSSL without `-legacy`.
+
+### Windows: Azure Artifact Signing
+
+[Azure Artifact Signing](https://learn.microsoft.com/azure/artifact-signing/)
+(formerly Trusted Signing) is the simplest way to sign Windows apps in CI: no
+hardware token, no certificate to renew, 9.99 USD per month. Microsoft verifies
+your identity once, then issues short-lived certificates when the workflow signs
+the app.
+
+<Callout type="warning">
+  **Check your eligibility first.** Organizations must be based in the United
+  States, Canada, the European Union, the United Kingdom, Australia, New
+  Zealand, Japan, South Korea, Singapore, Switzerland, Norway or Israel.
+  Individual developers must be in the **United States or Canada**. Elsewhere,
+  see [alternatives](#alternatives-to-azure-artifact-signing).
+</Callout>
+
+<Steps>
+
+#### Create an Azure subscription
+
+Sign in to the [Azure portal](https://portal.azure.com) with a Microsoft
+account, and create a **pay-as-you-go** subscription with a credit card. Free
+trials, credits and sponsored subscriptions are not accepted: upgrade a trial
+to pay-as-you-go first.
+
+As an **individual**, the billing account must have the **Individual** account
+type, with your legal name and address exactly as on your ID: Microsoft reads
+your identity from it. Check it in **Cost Management + Billing → Properties**
+before going further.
+
+#### Register the resource provider
+
+In the portal, open **Subscriptions →** your subscription **→ Resource
+providers**, search for `Microsoft.CodeSigning`, select it and click
+**Register**. It takes a minute.
+
+#### Create the Artifact Signing account
+
+Search for **Artifact Signing Accounts** in the portal search bar, then
+**Create**:
+
+- **Resource group**: create one, for example `code-signing`.
+- **Account name**: 3 to 24 letters, digits or dashes, unique across Azure. It
+  is the `AZURE_CODE_SIGNING_ACCOUNT` variable.
+- **Region**: the closest to you. Note its endpoint, it is the
+  `AZURE_ENDPOINT` variable:
+
+  | Region | Endpoint |
+  | ------ | -------- |
+  | East US | `https://eus.codesigning.azure.net` |
+  | West US | `https://wus.codesigning.azure.net` |
+  | West US 2 | `https://wus2.codesigning.azure.net` |
+  | West Central US | `https://wcus.codesigning.azure.net` |
+  | North Europe | `https://neu.codesigning.azure.net` |
+  | West Europe | `https://weu.codesigning.azure.net` |
+
+  Other regions follow the same pattern; see the
+  [quickstart](https://learn.microsoft.com/azure/artifact-signing/quickstart)
+  for the full list.
+- **Pricing tier**: **Basic**.
+
+Click **Review + create**, then **Create**.
+
+#### Give yourself the Identity Verifier role
+
+Even as the subscription owner, you cannot request an identity validation
+without this role. Open the account, then **Access control (IAM) → Add → Add
+role assignment**, search for **Artifact Signing Identity Verifier**, select it,
+and on the **Members** tab select your own user. Click **Review + assign**.
+
+#### Validate your identity
+
+In the account, open **Identity validations → New identity → Public**.
+
+- **Organization**: enter the legal name, website, a primary and a secondary
+  email (on the company's domain), the business identifier (company registration
+  number) and the address. Microsoft checks public business records, and may ask
+  for documents issued in the last 12 months: registration certificate,
+  articles of incorporation, domain invoice… It takes 1 to 20 business days.
+  Keep the company's public records up to date to speed it up. A representative
+  of the company then verifies their own identity, like an individual.
+- **Individual**: the form is filled from the billing account. When the status
+  changes to **Action Required**, open the request and follow the link to
+  verify your identity with **Microsoft Entra Verified ID**: you scan your
+  passport, driver's license or ID card with your phone, take a selfie, and add
+  the resulting credential to the **Microsoft Authenticator** app, then present
+  it by scanning a QR code. Install Authenticator on your phone beforehand.
+
+The status changes to **Completed** when it is done. The validated name is the
+publisher shown to Windows users, and the `AZURE_PUBLISHER_NAME` variable.
+
+#### Create a certificate profile
+
+In the account, open **Certificate profiles → Create → Public Trust**. Name it
+(5 to 100 letters and digits, e.g. `release`), select the completed identity
+validation, and click **Create**. The name is the `AZURE_CERTIFICATE_PROFILE`
+variable.
+
+Do not choose **Public Trust Test**: its certificates are not trusted by
+Windows.
+
+#### Create an app registration for GitHub Actions
+
+The workflow signs as an app, not as you. In the portal, open **Microsoft Entra
+ID → App registrations → New registration**, name it (e.g.
+`github-actions-signing`), keep **Accounts in this organizational directory
+only** and click **Register**. On its **Overview** page, note:
+
+- **Application (client) ID**: the `AZURE_CLIENT_ID` secret,
+- **Directory (tenant) ID**: the `AZURE_TENANT_ID` secret.
+
+Then open **Certificates & secrets → Client secrets → New client secret**,
+choose an expiration (24 months at most) and click **Add**. Copy the **Value**
+column right away, it is shown only once: it is the `AZURE_CLIENT_SECRET`
+secret. Do not copy the **Secret ID**, which looks similar.
+
+Add a reminder before the expiration date: once the client secret expires, the
+Windows build fails.
+
+#### Allow the app registration to sign
+
+Back in the Artifact Signing account, open **Access control (IAM) → Add → Add
+role assignment**, select **Artifact Signing Certificate Profile Signer**, and
+on the **Members** tab click **Select members** and search for the app
+registration by name. Click **Review + assign**. The role can take a few minutes
+to apply.
+
+#### Add the secrets and variables
+
+In **Settings → Secrets and variables → Actions**, on the **Secrets** tab:
+
+| Secret                | Value |
+| --------------------- | ----- |
+| `AZURE_TENANT_ID`     | Directory (tenant) ID of the app registration |
+| `AZURE_CLIENT_ID`     | Application (client) ID |
+| `AZURE_CLIENT_SECRET` | The client secret value |
+
+On the **Variables** tab:
+
+| Variable                     | Value |
+| ---------------------------- | ----- |
+| `AZURE_ENDPOINT`             | Endpoint of your account's region, e.g. `https://eus.codesigning.azure.net` |
+| `AZURE_CODE_SIGNING_ACCOUNT` | Artifact Signing account name |
+| `AZURE_CERTIFICATE_PROFILE`  | Certificate profile name |
+| `AZURE_PUBLISHER_NAME`       | Validated name, exactly as on the certificate (your company or legal name) |
+
+</Steps>
+
+Signing is enabled only when `AZURE_CLIENT_ID` is set. The variables can also be
+written directly in `electron-builder.ts`, as fallbacks.
+
+To check a downloaded installer, right-click it, open **Properties → Digital
+Signatures**: it lists your validated name.
+
+#### Windows troubleshooting
+
+- **`403 Forbidden`** or **`SignerSign() failed`**: the endpoint does not match
+  the account's region, or the **Artifact Signing Certificate Profile Signer**
+  role was assigned to the wrong member, or a few minutes ago.
+- **`AADSTS7000215: Invalid client secret provided`**: the client secret
+  expired, or the **Secret ID** was copied instead of the **Value**. Create a
+  new client secret and update `AZURE_CLIENT_SECRET`.
+- **Updates fail with a publisher error**: the auto updater checks that the
+  new installer is signed by the same `AZURE_PUBLISHER_NAME` as the installed
+  version. Keep it identical across releases. If it must change (for example
+  when moving from individual to company), users have to install the new version
+  manually once.
+
+#### SmartScreen still shows a warning
+
+SmartScreen trusts publishers based on reputation: the first downloads of a new
+publisher may still show a warning, even when signed. It goes away as more users
+download and run the app, usually after a few weeks. No certificate type skips
+this step anymore, and Microsoft does not offer a way to speed it up, except
+[submitting the file for analysis](https://www.microsoft.com/wdsi/filesubmission)
+as a software developer.
+
+#### Alternatives to Azure Artifact Signing
+
+If you are not eligible, buy an **OV code signing certificate** from a
+certificate authority (DigiCert, Sectigo, SSL.com, Certum…), from about a
+hundred to a few hundred USD per year. Since 2023, their private keys must be
+stored on a hardware token or in a cloud signing service, so pick a provider
+with a cloud service usable from CI (for example SSL.com eSigner or DigiCert
+KeyLocker), and configure it with
+[`win.signtoolOptions`](https://www.electron.build/code-signing-win) instead of
+`azureSignOptions` in `electron-builder.ts`.
+
+### Linux
+
+Linux packages are not signed.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs Biome, the type checker and a build on every pull
+request. To require a changeset in every pull request, add a step running
+`npx changeset status --since=origin/main`.

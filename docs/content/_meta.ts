@@ -1,0 +1,19 @@
+export default {
+  index: 'Introduction',
+  'getting-started': 'Getting Started',
+  'project-structure': 'Project Structure',
+  development: 'Development',
+  '-- Guides': { type: 'separator', title: 'Guides' },
+  ui: 'UI and Routing',
+  ipc: 'IPC with tRPC',
+  database: 'Database',
+  config: 'App Config',
+  theming: 'Dark Mode',
+  i18n: 'Translations',
+  assets: 'Icons and Images',
+  '-- Shipping': { type: 'separator', title: 'Shipping' },
+  releasing: 'Releasing',
+  'auto-update': 'Auto Update',
+  '-- More': { type: 'separator', title: 'More' },
+  'ai-agents': 'AI Agents'
+}

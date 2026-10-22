@@ -1,0 +1,35 @@
+# Dark Mode
+
+The app supports three themes: **System** (follows the OS), **Light** and
+**Dark**. The user picks one in **View → Appearance** in the native menu, or on
+the settings page. The choice is saved in the [app config](/doc/config).
+
+## How it works
+
+1. The `theme` config key is applied to Electron's
+   [`nativeTheme.themeSource`](https://www.electronjs.org/docs/latest/api/native-theme#nativethemethemesource)
+   at startup and on every change (`src/main/index.ts`).
+2. `themeSource` changes the native UI (menus, dialogs, title bar) **and** the
+   `prefers-color-scheme` media query in the renderer.
+3. The renderer only follows `prefers-color-scheme`: `syncColorScheme()`
+   (`src/renderer/src/lib/theme.ts`) toggles the `dark` class on `<html>`, which
+   Tailwind and shadcn/ui use for dark styles.
+
+Because the theme is applied by the main process before the window is shown,
+there is no flash of the wrong theme on startup.
+
+## Menu
+
+The native menu is built in `src/main/menu.ts`, with radio items for the three
+themes. It is rebuilt when the theme or the language changes, so the checked item
+and labels stay correct whichever side changed the setting.
+
+## Colors
+
+Theme colors are CSS variables in `src/renderer/src/styles.css`: `:root` for
+light, `.dark` for dark. Use the Tailwind classes that map to them
+(`bg-background`, `text-foreground`, `bg-muted`, `border`…) instead of fixed
+colors. Generate a new palette with the
+[shadcn/ui theme editor](https://ui.shadcn.com/themes) and paste the variables.
+
+For one-off cases, use the `dark:` variant: `className="bg-white dark:bg-black"`.

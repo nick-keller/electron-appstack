@@ -1,0 +1,15 @@
+node_modules
+.DS_Store
+.idea
+*.log
+.env*.local
+
+# docs
+docs/.next
+docs/out
+docs/public/_pagefind
+docs/next-env.d.ts
+
+# template
+template/out
+template/dist

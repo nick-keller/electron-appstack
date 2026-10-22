@@ -1,0 +1,54 @@
+# Development
+
+## Hot reload
+
+`npm run dev` starts [electron-vite](https://electron-vite.org/) in watch mode:
+
+| You edit                  | What happens                                                        |
+| ------------------------- | ------------------------------------------------------------------- |
+| `src/renderer/**`         | Vite hot module replacement: React components update in place, state is kept |
+| `src/shared/**`           | Renderer side: hot reload. Main side: the app restarts               |
+| `src/main/**`             | The main process is rebuilt and the app restarts                    |
+| `src/preload/**`          | The preload script is rebuilt and the page reloads                  |
+| `src/renderer/src/routes` | The route tree (`routeTree.gen.ts`) is regenerated, then hot reload |
+
+In development the window loads the Vite dev server (`ELECTRON_RENDERER_URL`).
+In production it loads the built `out/renderer/index.html` from disk.
+
+Open the DevTools with **View → Toggle Developer Tools** (or `Cmd+Option+I` /
+`Ctrl+Shift+I`).
+
+## Type checking
+
+TypeScript is split in two projects:
+
+- `tsconfig.node.json` – main, preload and shared code, with Node.js types
+- `tsconfig.web.json` – renderer and shared code, with DOM types
+
+`npm run typecheck` checks both. `npm run build` runs it before building.
+
+## Linting and formatting
+
+The template uses [Biome](https://biomejs.dev/) for both linting and formatting,
+configured in `biome.json`:
+
+```sh
+npm run check       # lint + format check + import sorting (used in CI)
+npm run check:fix   # fix everything that can be fixed safely
+npm run lint        # lint only
+npm run format      # format only
+```
+
+Style: single quotes, no semicolons, 2 spaces, 100 columns. Generated files
+(`routeTree.gen.ts`, `drizzle/meta`) and Markdown are ignored. The shadcn/ui
+components in `components/ui/` have relaxed accessibility rules since they come
+from upstream.
+
+Install the Biome extension for your editor to format on save:
+[VS Code](https://marketplace.visualstudio.com/items?itemName=biomejs.biome),
+[JetBrains](https://plugins.jetbrains.com/plugin/22761-biome).
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and push to `main`:
+`npm ci`, `npm run check`, `npm run typecheck` and a build.

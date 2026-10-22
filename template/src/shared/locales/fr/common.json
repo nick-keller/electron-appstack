@@ -1,0 +1,38 @@
+{
+  "appName": "Electron App",
+  "nav": {
+    "home": "Accueil",
+    "settings": "Réglages"
+  },
+  "home": {
+    "title": "Tâches",
+    "description": "Enregistrées dans une base SQLite locale avec Drizzle ORM.",
+    "placeholder": "Que faut-il faire ?",
+    "add": "Ajouter",
+    "empty": "Rien à faire pour l'instant.",
+    "delete": "Supprimer",
+    "remaining_one": "{{count}} tâche restante",
+    "remaining_other": "{{count}} tâches restantes"
+  },
+  "settings": {
+    "title": "Réglages",
+    "description": "Enregistrés dans le fichier de configuration avec electron-store.",
+    "theme": "Thème",
+    "language": "Langue",
+    "versions": "Versions"
+  },
+  "theme": {
+    "system": "Système",
+    "light": "Clair",
+    "dark": "Sombre"
+  },
+  "language": {
+    "system": "Système",
+    "en": "English",
+    "fr": "Français"
+  },
+  "update": {
+    "downloaded": "La version {{version}} est prête à être installée.",
+    "restart": "Redémarrer"
+  }
+}

@@ -1,0 +1,21 @@
+/* Dark code blocks in both light and dark mode, matching the github-dark Shiki theme */
+.nextra-code pre {
+  background-color: #24292e;
+  color: #e1e4e8;
+  --tw-ring-color: #30363d;
+}
+
+.nextra-code > div:has(+ pre) {
+  background-color: #1f2428;
+  color: #d1d5da;
+  border-color: #30363d;
+}
+
+.nextra-code button {
+  color: #d1d5da;
+  border-color: #30363d;
+}
+
+.nextra-code button:hover {
+  background-color: #2f363d;
+}

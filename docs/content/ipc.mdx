@@ -1,0 +1,170 @@
+import { Callout } from 'nextra/components'
+
+# IPC with tRPC
+
+The renderer has no access to Node.js. Everything it needs from the main process
+(database, files, config, OS) goes through [tRPC](https://trpc.io/) procedures,
+sent over Electron IPC by [trpc-electron](https://www.npmjs.com/package/trpc-electron), a maintained fork of electron-trpc for tRPC v11.
+
+- **Typed end to end** – the renderer imports the type of the router, no code generation
+- **Validated** – inputs are parsed with [zod](https://zod.dev/) in the main process
+- **Rich types** – [superjson](https://github.com/flightcontrolhq/superjson) keeps `Date`, `Map`, `Set`…
+- **Secure** – the preload script only exposes the tRPC bridge, never `ipcRenderer`
+
+## Define procedures
+
+Routers live in `src/main/trpc/routers/` and are combined in
+`src/main/trpc/router.ts`.
+
+```ts filename="src/main/trpc/routers/todos.ts"
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { todos } from '../../db/schema'
+import { publicProcedure, router } from '../trpc'
+
+export const todosRouter = router({
+  list: publicProcedure.query(({ ctx }) => ctx.db.select().from(todos).all()),
+
+  create: publicProcedure
+    .input(z.object({ title: z.string().trim().min(1) }))
+    .mutation(({ ctx, input }) => ctx.db.insert(todos).values(input).returning().get()),
+
+  delete: publicProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) => {
+    ctx.db.delete(todos).where(eq(todos.id, input.id)).run()
+  })
+})
+```
+
+The context (`ctx`) contains the Drizzle database (`db`) and the typed config
+store (`config`). Add more in `createContext` in `src/main/trpc/trpc.ts`.
+
+### Nest routers
+
+A router is a valid value inside another router, so procedures can be grouped
+under namespaces. Each key becomes a segment of the path the renderer calls.
+The root router in `src/main/trpc/router.ts` nests every feature router:
+
+```ts filename="src/main/trpc/router.ts"
+import { todosRouter } from './routers/todos'
+import { router } from './trpc'
+
+export const appRouter = router({
+  todos: todosRouter // trpc.todos.list, trpc.todos.create…
+})
+```
+
+Nesting works at any depth. To split a large feature, create sub-routers and
+mount them in the feature router, next to its own procedures:
+
+```ts filename="src/main/trpc/routers/todos.ts"
+const tagsRouter = router({
+  list: publicProcedure.query(({ ctx }) => ctx.db.select().from(tags).all())
+})
+
+export const todosRouter = router({
+  list: publicProcedure.query(({ ctx }) => ctx.db.select().from(todos).all()),
+  tags: tagsRouter // trpc.todos.tags.list
+})
+```
+
+The renderer gets the new path with full types, no extra wiring:
+`useQuery(trpc.todos.tags.list.queryOptions())`. Invalidating
+`trpc.todos.pathKey()` invalidates every query under `todos`, nested ones
+included.
+
+## Call them from React
+
+`src/renderer/src/lib/trpc.ts` creates the client and a
+[TanStack Query integration](https://trpc.io/docs/client/tanstack-react-query/usage)
+proxy, `trpc`, which builds query and mutation options:
+
+```tsx
+import { trpc } from '@renderer/lib/trpc'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+function Todos() {
+  const queryClient = useQueryClient()
+  const { data: todos } = useQuery(trpc.todos.list.queryOptions())
+
+  const create = useMutation(
+    trpc.todos.create.mutationOptions({
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.todos.list.queryKey() })
+    })
+  )
+
+  return <button onClick={() => create.mutate({ title: 'New todo' })}>Add</button>
+}
+```
+
+Outside React (for example before the first render), use the plain client:
+`await trpcClient.todos.list.query()`.
+
+Queries do not retry on error: IPC calls do not fail because of the network.
+
+## Caching with TanStack Query
+
+[TanStack Query](https://tanstack.com/query) (formerly React Query) stores the
+result of every query in a cache shared by the whole renderer, `queryClient`
+(`src/renderer/src/lib/trpc.ts`). A few things to know:
+
+- **Query keys** – each query is cached under a key built by tRPC from the
+  procedure path and its input. `trpc.todos.list.queryKey()` returns it, so you
+  never write keys by hand. Two components using the same procedure with the
+  same input share one cache entry and one IPC call.
+- **Stale data** – by default, cached data is considered stale right away. It
+  is shown instantly, then refetched in the background when a component using
+  it mounts or when the window regains focus. Set `staleTime` (per query or in
+  `defaultOptions`) to refetch less often.
+- **Garbage collection** – when no component uses a query anymore, its data
+  stays in the cache for 5 minutes (`gcTime`), then is removed.
+- **Invalidation** – after a mutation, mark the affected queries as stale so
+  they refetch: `queryClient.invalidateQueries({ queryKey: trpc.todos.list.queryKey() })`.
+  Use `trpc.todos.pathKey()` to invalidate every procedure of a router.
+- **Direct updates** – when you already have the new value (from a mutation
+  result or a subscription), write it to the cache instead of refetching:
+  `queryClient.setQueryData(trpc.updater.status.queryKey(), status)`.
+
+To learn more:
+
+- [Important defaults](https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults)
+- [Caching examples](https://tanstack.com/query/latest/docs/framework/react/guides/caching)
+- [Query invalidation](https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation)
+- [Updates from mutation responses](https://tanstack.com/query/latest/docs/framework/react/guides/updates-from-mutation-responses)
+- [tRPC TanStack React Query integration](https://trpc.io/docs/client/tanstack-react-query/usage)
+
+## Subscriptions
+
+Subscriptions push events from the main process to the renderer. The template
+uses a typed event bus, `appEvents` (`src/main/events.ts`), and a helper that
+forwards an event to the renderer:
+
+```ts filename="src/main/events.ts"
+export type AppEvents = {
+  navigate: [to: string]
+  configChanged: [config: Config]
+  updateStatus: [status: UpdateStatus]
+}
+```
+
+```ts filename="src/main/trpc/routers/app.ts"
+export const appRouter = router({
+  onNavigate: appEventSubscription('navigate')
+})
+```
+
+```tsx filename="src/renderer/src/routes/__root.tsx"
+import { useSubscription } from '@trpc/tanstack-react-query'
+
+useSubscription(
+  trpc.app.onNavigate.subscriptionOptions(undefined, { onData: (to) => navigate({ to }) })
+)
+```
+
+Emit from anywhere in the main process: `appEvents.emit('navigate', '/settings')`.
+
+<Callout type="warning">
+  trpc-electron fails on native async generators with Node.js 24 and later
+  (`Symbol.asyncDispose already exists`). To write your own async generator
+  subscription, wrap it with `ipcIterable()` from `src/main/trpc/trpc.ts`:
+  `publicProcedure.subscription(({ signal }) => ipcIterable(myGenerator(signal)))`.
+</Callout>

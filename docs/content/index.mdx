@@ -1,0 +1,34 @@
+# Electron AppStack
+
+Electron AppStack is a complete starting point for building desktop apps with
+[Electron](https://www.electronjs.org/) and [TypeScript](https://www.typescriptlang.org/).
+
+It is not a framework or a dependency: you copy the template once with
+[degit](https://github.com/Rich-Harris/degit) and the code is yours.
+
+## What's included
+
+- **Electron + electron-vite** – hot reload of the renderer, automatic restart of the main process ([Development](/doc/development))
+- **React, TanStack Router, TanStack Query, shadcn/ui, Tailwind CSS** – the renderer stack ([UI and Routing](/doc/ui))
+- **tRPC + zod over IPC** – fully typed, validated calls from the renderer to the main process ([IPC with tRPC](/doc/ipc))
+- **SQLite + Drizzle ORM** – local database with migrations applied on startup ([Database](/doc/database))
+- **Typed app config** – electron-store validated by a zod schema ([App Config](/doc/config))
+- **Dark mode** – system, light or dark, from the native menu or the settings ([Dark Mode](/doc/theming))
+- **Translations** – i18next in the renderer and the native menu ([Translations](/doc/i18n))
+- **Biome** – one fast tool for linting and formatting ([Development](/doc/development#linting-and-formatting))
+- **Icons and images conventions** – app icon, DMG background, renderer images ([Icons and Images](/doc/assets))
+- **Releases** – Changesets for versions and changelog, GitHub Actions to build, sign, notarize and publish ([Releasing](/doc/releasing))
+- **Auto update** – electron-updater with GitHub Releases ([Auto Update](/doc/auto-update))
+- **AI agent instructions** – `AGENTS.md` and skills for Claude Code and other agents ([AI Agents](/doc/ai-agents))
+- **Secure defaults** – sandboxed renderer, context isolation, strict Content Security Policy
+
+## Quick start
+
+```sh
+npx degit nick-keller/electron-appstack/template my-app
+cd my-app
+npm install
+npm run dev
+```
+
+Continue with [Getting Started](/doc/getting-started).

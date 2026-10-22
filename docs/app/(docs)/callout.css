@@ -1,0 +1,15 @@
+/* Borderless callouts with roomier padding and spacing */
+.nextra-callout {
+  border: none;
+  padding: 1em 1.25em 1em 0.5em;
+  margin-block: 2em;
+  gap: 0.25em;
+}
+
+.nextra-callout:first-child {
+  margin-top: 0;
+}
+
+.nextra-callout:last-child {
+  margin-bottom: 0;
+}

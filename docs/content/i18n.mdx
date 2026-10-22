@@ -1,0 +1,145 @@
+import { FileTree } from 'nextra/components'
+
+export const Name = ({ name, note }) => (
+  <>
+    {name}
+    <span style={{ marginLeft: '0.75rem', opacity: 0.6, fontWeight: 400 }}>{note}</span>
+  </>
+)
+
+# Translations
+
+The UI is translated with [i18next](https://www.i18next.com/) and
+[react-i18next](https://react.i18next.com/). The template ships English and
+French.
+
+## Files
+
+Translations are JSON files shared by both processes:
+
+<FileTree>
+  <FileTree.Folder name="src/shared" defaultOpen>
+    <FileTree.File name={<Name name="i18n.ts" note="Resources and language resolution" />} />
+    <FileTree.Folder name="locales" defaultOpen>
+      <FileTree.Folder name="en" defaultOpen>
+        <FileTree.File name={<Name name="common.json" note="Renderer UI" />} />
+        <FileTree.File name={<Name name="menu.json" note="Native menu (main process)" />} />
+      </FileTree.Folder>
+      <FileTree.Folder name="fr" defaultOpen>
+        <FileTree.File name="common.json" />
+        <FileTree.File name="menu.json" />
+      </FileTree.Folder>
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+English is the reference: keys are type-checked against `en/common.json`
+(`src/renderer/src/i18next.d.ts`), so `t('home.tilte')` is a type error.
+
+## In React
+
+```tsx
+import { useTranslation } from 'react-i18next'
+
+function Home() {
+  const { t } = useTranslation()
+  return (
+    <>
+      <h1>{t('home.title')}</h1>
+      <p>{t('home.remaining', { count: 3 })}</p>
+    </>
+  )
+}
+```
+
+Plurals use the `_one` / `_other` suffixes:
+
+```json
+{
+  "remaining_one": "{{count}} item left",
+  "remaining_other": "{{count}} items left"
+}
+```
+
+## Language selection
+
+The `language` setting is `system`, `en` or `fr`. `system` resolves with
+`app.getLocale()`: `fr-CA` becomes `fr`, unsupported languages fall back to
+English.
+
+The renderer loads the config before its first render, so it starts in the right
+language. When the user changes the language in the settings, the main process
+saves it, rebuilds the native menu in the new language and notifies the renderer,
+which calls `i18n.changeLanguage()`.
+
+## Add a language
+
+1. Copy `src/shared/locales/en/` to `src/shared/locales/de/` and translate the files.
+2. Add `'de'` to `languages` in `src/shared/config.ts`.
+3. Import the files and add them to `resources` in `src/shared/i18n.ts`.
+4. Add `"de": "Deutsch"` under `language` in every `common.json`.
+
+Or paste this prompt into your coding assistant, replacing German with the
+language you want:
+
+```text
+Add German (`de`) to the app's translations.
+
+1. Create `src/shared/locales/de/` with a `common.json` and a `menu.json`
+   that have exactly the same keys as the files in `src/shared/locales/en/`.
+   Translate every value to German:
+   - Keep `{{placeholders}}` unchanged.
+   - Keep the plural suffixes (`_one`, `_other`) and add the other plural
+     forms German needs, if any (see i18next plural rules).
+   - Keep the tone and length of the English text: these are short UI labels.
+2. Add `'de'` to `languages` in `src/shared/config.ts`.
+3. In `src/shared/i18n.ts`, import the two new files and add them to
+   `resources`.
+4. Add `"de": "Deutsch"` under `language` in every `common.json`, including
+   the new one. The language name is written in its own language.
+5. Check that `de/common.json` and `de/menu.json` have no missing or extra
+   keys compared to English, then run `pnpm typecheck` and fix any error.
+```
+
+## Don't need translations?
+
+If your app only ships in one language, translations are extra work: every
+string goes through `t()` and lives in a JSON file away from the component that
+uses it. You can remove i18n entirely and write strings directly in the code.
+Nothing else in the template depends on it.
+
+Paste this prompt into your coding assistant (Claude Code, Cursor…) to do it:
+
+```text
+Remove all translation (i18n) support from this project. The app will only be
+in English, with strings written directly in the code.
+
+1. Inline every translated string:
+   - In the renderer, replace each `t('key')` call with its English text from
+     `src/shared/locales/en/common.json`. For interpolations, use a template
+     literal. For plurals (`_one` / `_other` keys), pick the text with a
+     condition on `count`.
+   - Remove every `useTranslation()` call and `react-i18next` import.
+   - In `src/main/menu.ts`, replace `t.<key>` with the English text from
+     `src/shared/locales/en/menu.json` and remove the language resolution.
+2. Delete `src/shared/i18n.ts`, `src/shared/locales/`,
+   `src/renderer/src/lib/i18n.ts` and `src/renderer/src/i18next.d.ts`.
+3. In `src/renderer/src/main.tsx`, remove the `initI18n()` call. In
+   `src/renderer/src/routes/__root.tsx`, remove the `i18n.changeLanguage()`
+   call when the config changes.
+4. Remove the `language` setting:
+   - `languages`, `Language`, `languageSettingSchema`, `LanguageSetting` and the
+     `language` key in `src/shared/config.ts`.
+   - The `setLanguage` procedure in `src/main/trpc/routers/config.ts`.
+   - The language select in `src/renderer/src/routes/settings.tsx`.
+   - `'language'` in the config keys watched in `src/main/index.ts` (keep the
+     menu rebuild for `theme`).
+   - `locale` in `src/main/trpc/routers/app.ts`, if nothing else uses it.
+5. Uninstall `i18next` and `react-i18next`.
+6. Update the docs for assistants: delete `.claude/skills/add-translation/`,
+   remove i18n from `AGENTS.md` and `README.md`, and remove `useTranslation`
+   from the examples in `.claude/skills/*/SKILL.md`.
+7. Search the project for `i18n`, `i18next`, `useTranslation`, `locales` and
+   `language` to make sure nothing is left, then run `pnpm typecheck` and
+   `pnpm lint` and fix any error.
+```

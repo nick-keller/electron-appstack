@@ -1,0 +1,17 @@
+{
+  "name": "electron-appstack-monorepo",
+  "private": true,
+  "packageManager": "pnpm@12.10.1",
+  "scripts": {
+    "dev:docs": "pnpm --filter docs dev",
+    "dev:template": "pnpm --filter electron-app dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "check": "biome check && pnpm --filter electron-app check",
+    "check:fix": "biome check --write && pnpm --filter electron-app check:fix",
+    "lock:template": "node scripts/update-template-lock.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.2"
+  }
+}

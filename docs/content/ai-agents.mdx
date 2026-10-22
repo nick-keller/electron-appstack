@@ -1,0 +1,41 @@
+# AI Agents
+
+The template includes instructions so coding agents (Claude Code, Cursor, Codex,
+Copilot…) follow the same conventions as you.
+
+## AGENTS.md
+
+`AGENTS.md`, at the root of the app, is the shared instruction file read by most
+agents. It describes:
+
+- The stack and the role of each folder
+- The commands to run, and that `npm run check:fix` and `npm run typecheck` must
+  pass before a task is done
+- The rules of the codebase: no Node.js in the renderer, every IPC call through
+  tRPC with zod validation, every string translated, shadcn/ui and theme colors
+  for UI, a changeset for user-facing changes
+
+`CLAUDE.md` contains `@AGENTS.md`, which makes Claude Code load the same file.
+
+## Skills
+
+Skills are step-by-step guides for common tasks, in `.claude/skills/<name>/SKILL.md`.
+Claude Code loads a skill when the task matches its description; other agents can
+be pointed to the folder.
+
+| Skill                | When it is used |
+| -------------------- | --------------- |
+| `add-trpc-procedure` | The renderer needs data or an action from the main process |
+| `add-db-table`       | A table or column changes, with the migration |
+| `add-route`          | A new page or URL parameter |
+| `add-translation`    | New UI text, or a new language |
+| `add-ui-component`   | New UI: shadcn/ui components, icons, images |
+| `add-config-key`     | A new persisted setting |
+| `release`            | Recording a change in the changelog, publishing a version |
+
+## Keep them up to date
+
+These files are part of your code. When you change a convention (a new folder, a
+new library, a different way to do something), update `AGENTS.md` and the
+matching skill, or agents will keep following the old way. Add skills for the
+tasks you repeat in your app.

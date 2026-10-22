@@ -1,0 +1,32 @@
+packages:
+  - docs
+  - template
+
+minimumReleaseAgeExclude:
+  - electron@45.0.0
+  - vite@8.3.5
+  - "@biomejs/biome@2.6.2"
+  - "@biomejs/cli-android-arm64@2.6.2"
+  - "@biomejs/cli-android-x64@2.6.2"
+  - "@biomejs/cli-darwin-arm64@2.6.2"
+  - "@biomejs/cli-darwin-x64@2.6.2"
+  - "@biomejs/cli-linux-arm64-musl@2.6.2"
+  - "@biomejs/cli-linux-arm64@2.6.2"
+  - "@biomejs/cli-linux-x64-musl@2.6.2"
+  - "@biomejs/cli-linux-x64@2.6.2"
+  - "@biomejs/cli-win32-arm64@2.6.2"
+  - "@biomejs/cli-win32-x64@2.6.2"
+  - i18next@26.5.4
+  - lucide-react@1.61.0
+
+# Packages allowed to run install scripts (native modules and binaries)
+allowBuilds:
+  better-sqlite3: true
+  electron: true
+  esbuild: true
+  electron-winstaller: false
+
+overrides:
+  # nextra-theme-docs 4.6.1 breaks with zod >= 4.4 ("expected nonoptional" on Layout children)
+  nextra-theme-docs>zod: ~4.3.6
+  nextra>zod: ~4.3.6

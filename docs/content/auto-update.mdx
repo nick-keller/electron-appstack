@@ -1,0 +1,56 @@
+import { Callout } from 'nextra/components'
+
+# Auto Update
+
+Installed apps update themselves with
+[electron-updater](https://www.electron.build/auto-update), from the GitHub
+releases created by the [release workflow](/doc/releasing).
+
+## How it works
+
+- electron-builder writes the update feed (`latest.yml`, `latest-mac.yml`,
+  `latest-linux.yml`) and uploads it with the installers. The packaged app knows
+  where to find it from `publish` in `electron-builder.ts`.
+- On startup, then every 4 hours, the app checks for a new version and
+  downloads it in the background (`src/main/updater.ts`).
+- When the download is done, a banner offers to restart now. Otherwise the
+  update is installed when the app quits.
+- **Check for Updates…** in the app menu (macOS) or the File menu (Windows,
+  Linux) checks right away and tells the user if the app is up to date.
+
+The status is pushed to the renderer with the `updater.onStatus` subscription:
+
+```ts
+type UpdateStatus =
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'not-available' }
+  | { state: 'available'; version: string }
+  | { state: 'downloading'; percent: number }
+  | { state: 'downloaded'; version: string }
+  | { state: 'error'; message: string }
+```
+
+`src/renderer/src/components/update-banner.tsx` shows how to use it.
+
+## Requirements
+
+<Callout type="warning">
+  On macOS, auto update only works for **signed** apps, and needs the `zip`
+  target (already configured).
+</Callout>
+
+- Updates are disabled in development (`npm run dev`).
+- An app built with `npm run dist:dir` has no update feed and logs an error when
+  it checks for updates: use `npm run dist` to test updates locally.
+- Releases must be published (not drafts) to be found by the updater. The release
+  workflow publishes them once every platform is built.
+- Linux: only the AppImage updates itself. Users of the `deb` package update
+  through their package manager.
+
+## Private repositories
+
+electron-updater reads public GitHub releases. For a private repository, publish
+the builds to a public repository or another provider
+([S3, a generic server…](https://www.electron.build/publish)), and update
+`publish` in `electron-builder.ts`.
