@@ -147,19 +147,13 @@ a.tile:not([data-accent]):hover {
 }
 
 .brandMark {
-  position: relative;
+  display: grid;
+  place-items: center;
   width: 30px;
   height: 30px;
   border-radius: 10px;
   background: var(--lime);
-}
-
-.brandMark::after {
-  content: "";
-  position: absolute;
-  inset: 9px;
-  border-radius: 4px;
-  background: var(--bg);
+  color: var(--bg);
 }
 
 .nav {
@@ -598,7 +592,8 @@ a.tile:not([data-accent]):hover {
   color: var(--muted);
 }
 
-.page .lead a {
+.page .lead a,
+.page .faq p a {
   color: var(--fg);
   text-decoration: underline;
   text-underline-offset: 3px;

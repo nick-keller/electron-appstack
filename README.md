@@ -1,3 +1,5 @@
+<img src="docs/public/logo.png" alt="Electron AppStack logo" width="96" />
+
 # Electron AppStack
 
 A complete Electron + TypeScript starter (React, tRPC, SQLite, auto update, signed releases…), and its documentation.

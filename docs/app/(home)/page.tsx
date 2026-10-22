@@ -306,7 +306,14 @@ const icons = {
       <path d="M7 17 17 7" />
     </>
   ),
-  check: <path d="M20 6 9 17l-5-5" />
+  check: <path d="M20 6 9 17l-5-5" />,
+  layers: (
+    <>
+      <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" />
+      <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" />
+      <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" />
+    </>
+  )
 }
 
 type IconName = keyof typeof icons
@@ -532,7 +539,11 @@ export const todosRouter = router({
 const create = useMutation(trpc.todos.create.mutationOptions())
 create.mutate({ title: 'Ship v1' }) // typed, validated, autocompleted`
 
-const faq = [
+const twitterUrl = 'https://x.com/NicolasKa3'
+
+// `answer` is the plain text used in the FAQPage JSON-LD, `content` replaces it on the page when
+// the answer has links
+const faq: { question: string; answer: string; content?: ReactNode }[] = [
   {
     question: 'Is Electron AppStack really free?',
     answer:
@@ -549,9 +560,49 @@ const faq = [
       'Yes, that is what it is made for. Licensing with LicenseManager and Stripe is built in, and your main process ships as V8 bytecode so your code is not readable in the packaged app. Licensing stays disabled until you configure it, so free apps work too.'
   },
   {
+    question: 'How do I sell an Electron app?',
+    answer:
+      'Customers pay through a Stripe checkout link, LicenseManager creates a license and emails the key, and the app asks for it in its activation window. Perpetual licenses, subscriptions, a maximum number of computers per license and updates for a limited time are all set in your LicenseManager policy, without changing the code.'
+  },
+  {
+    question: 'How do I add license keys to an Electron app?',
+    answer:
+      'They are already there. Set your LicenseManager product id and API key, and the app shows an activation window, validates the key, stores it in the system keychain, keeps working offline for as long as your policy allows and only installs the updates the license includes.'
+  },
+  {
+    question: 'How do I protect the source code of an Electron app?',
+    answer:
+      'JavaScript in a packaged Electron app is easy to read, so the main process, where the licensing and business logic live, is compiled to V8 bytecode. Electron fuses block running the app as plain Node.js or with inspector flags, and ASAR integrity stops the app from starting if its files were modified.'
+  },
+  {
+    question: 'How do I auto update an Electron app?',
+    answer:
+      'electron-updater is set up to read GitHub Releases. The app checks for a new version on startup and every 4 hours, downloads it in the background, then offers to restart or installs it when the app quits, on macOS, Windows and Linux (AppImage).'
+  },
+  {
+    question: 'How do I code sign and notarize an Electron app?',
+    answer:
+      'Add your certificates as GitHub secrets: the release workflow signs and notarizes macOS builds with an Apple Developer ID (99 USD per year) and signs Windows builds with Azure Artifact Signing (from 9.99 USD per month). Without the secrets, it still builds unsigned installers.'
+  },
+  {
     question: 'Which platforms are supported?',
     answer:
-      'macOS, Windows and Linux. The GitHub Actions workflow builds, signs, notarizes and publishes installers for every platform.'
+      'macOS (dmg, arm64 and x64), Windows (NSIS installer, x64 and arm64) and Linux (AppImage and deb). Merging a pull request is enough for the GitHub Actions workflow to build, sign, notarize and publish installers for every platform.'
+  },
+  {
+    question: 'Can I keep my source code private?',
+    answer:
+      'Yes. Build from a private repository and publish the releases to a second, public repository that only contains the installers, so auto update keeps working without exposing your code.'
+  },
+  {
+    question: 'Why Electron and not Tauri?',
+    answer:
+      'Electron ships the same Chromium on every platform, so your React app looks and behaves the same everywhere, and the backend is Node.js, with the whole npm ecosystem and one language for the whole app. Tauri makes smaller installers, but uses a different webview per platform and a Rust backend.'
+  },
+  {
+    question: 'How is it different from electron-vite or Electron Forge templates?',
+    answer:
+      'Those templates give you a window and a build. Electron AppStack starts where they stop: a typed backend with tRPC and SQLite, routing, a design system, translations, auto update, a release pipeline, source code protection and licensing, all wired together and documented.'
   },
   {
     question: 'Is it a framework I depend on?',
@@ -562,6 +613,78 @@ const faq = [
     question: 'Does it work with AI coding agents?',
     answer:
       'Yes. The template ships an AGENTS.md and skills, so Claude Code and other agents follow the project conventions when they add routes, procedures or tables.'
+  },
+  {
+    question: 'Why is it free?',
+    answer:
+      'I built RabbitGUI, a desktop app made with Electron, and setting everything up took me months: typed IPC, a local database, auto update, code signing on every platform, source code protection, license keys. None of it had anything to do with the app itself. Once it all worked, I turned it into this template and gave it away, so other developers can skip that part and spend their time on their own app.',
+    content: (
+      <>
+        I built <a href="https://rabbitgui.com">RabbitGUI</a>, a desktop app made with Electron, and
+        setting everything up took me months: typed IPC, a local database, auto update, code signing
+        on every platform, source code protection, license keys. None of it had anything to do with
+        the app itself. Once it all worked, I turned it into this template and gave it away, so
+        other developers can skip that part and spend their time on their own app.
+      </>
+    )
+  },
+  {
+    question: 'How can I report an issue?',
+    answer:
+      'Open an issue on GitHub with the steps to reproduce it, your platform and what you expected to happen.',
+    content: (
+      <>
+        Open an <a href={`${githubUrl}/issues`}>issue on GitHub</a> with the steps to reproduce it,
+        your platform and what you expected to happen.
+      </>
+    )
+  },
+  {
+    question: 'How can I suggest an improvement?',
+    answer:
+      'Open an issue on GitHub describing your idea and the problem it solves. Feature ideas, better defaults and missing documentation are all welcome.',
+    content: (
+      <>
+        Open an <a href={`${githubUrl}/issues`}>issue on GitHub</a> describing your idea and the
+        problem it solves. Feature ideas, better defaults and missing documentation are all welcome.
+      </>
+    )
+  },
+  {
+    question: 'How can I contribute?',
+    answer:
+      'Pull requests are welcome on GitHub, from typo fixes to new features. For a big change, open an issue first so we can agree on the approach before you write the code.',
+    content: (
+      <>
+        <a href={`${githubUrl}/pulls`}>Pull requests</a> are welcome, from typo fixes to new
+        features. For a big change, open an issue first so we can agree on the approach before you
+        write the code.
+      </>
+    )
+  },
+  {
+    question: 'How can I say thank you and help the project?',
+    answer:
+      'Spread the word: star the repository on GitHub and share Electron AppStack on social media, mentioning @NicolasKa3 on X. It helps more developers find it, and it makes my day.',
+    content: (
+      <>
+        Spread the word: star the <a href={githubUrl}>repository on GitHub</a> and share Electron
+        AppStack on social media, mentioning <a href={twitterUrl}>@NicolasKa3</a> on X. It helps
+        more developers find it, and it makes my day.
+      </>
+    )
+  },
+  {
+    question: 'I built an app with Electron AppStack, can I showcase it here?',
+    answer:
+      'Of course! Open an issue on GitHub with your app name, a link and a screenshot. Mention Electron AppStack on social media and your showcase gets a dofollow backlink to your website.',
+    content: (
+      <>
+        Of course! Open an <a href={`${githubUrl}/issues/new`}>issue on GitHub</a> with your app
+        name, a link and a screenshot. Mention Electron AppStack on social media and your showcase
+        gets a dofollow backlink to your website.
+      </>
+    )
   }
 ]
 
@@ -694,7 +817,9 @@ export default function HomePage() {
 
       <header className={styles.header}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden />
+          <span className={styles.brandMark} aria-hidden>
+            <Icon name="layers" size={18} />
+          </span>
           Electron AppStack
         </Link>
         <nav className={styles.nav} aria-label="Main">
@@ -941,7 +1066,7 @@ export default function HomePage() {
             {faq.map((item) => (
               <details key={item.question} className={styles.tile}>
                 <summary>{item.question}</summary>
-                <p>{item.answer}</p>
+                <p>{item.content ?? item.answer}</p>
               </details>
             ))}
           </div>
@@ -964,7 +1089,9 @@ export default function HomePage() {
         <div className={styles.footerInner}>
           <div>
             <strong className={styles.brand}>
-              <span className={styles.brandMark} aria-hidden />
+              <span className={styles.brandMark} aria-hidden>
+                <Icon name="layers" size={18} />
+              </span>
               Electron AppStack
             </strong>
             <p>The free, production-ready fullstack Electron boilerplate.</p>
