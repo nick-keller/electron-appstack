@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!template", "!**/*.md", "!docs/public/_pagefind"]
+    "includes": ["**", "!template", "!**/*.md", "!docs/public/_pagefind", "!pnpm-lock.yaml"]
   },
   "formatter": {
     "enabled": true,
@@ -35,5 +35,22 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
+          }
+        }
+      }
+    }
+  ]
 }

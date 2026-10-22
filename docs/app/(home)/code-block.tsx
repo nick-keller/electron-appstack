@@ -4,7 +4,7 @@ import { codeToTokens } from 'shiki'
 export async function CodeBlock({
   code,
   lang = 'tsx',
-  className,
+  className
 }: {
   code: string
   lang?: 'tsx' | 'bash'

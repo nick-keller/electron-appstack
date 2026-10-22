@@ -18,6 +18,7 @@ const logo = (
       aria-hidden
     >
       <svg
+        aria-hidden="true"
         width={16}
         height={16}
         viewBox="0 0 24 24"
@@ -36,12 +37,7 @@ const logo = (
   </span>
 )
 
-const navbar = (
-  <Navbar
-    logo={logo}
-    projectLink="https://github.com/nick-keller/electron-appstack"
-  />
-)
+const navbar = <Navbar logo={logo} projectLink="https://github.com/nick-keller/electron-appstack" />
 const footer = <Footer>© {new Date().getFullYear()} Electron AppStack</Footer>
 
 export default async function DocsLayout({ children }: { children: ReactNode }) {

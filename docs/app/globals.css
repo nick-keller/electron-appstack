@@ -1,8 +1,8 @@
 /* Tailwind without Preflight: the docs theme ships its own reset and the landing page is styled
    without one */
 @layer theme, base, components, utilities;
-@import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/utilities.css' layer(utilities);
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 
 /* Match the docs theme, which toggles dark mode with a `dark` class on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
