@@ -49,3 +49,9 @@ pnpm install
 | `pnpm lock:template` | Regenerate `template/package-lock.json`         |
 
 The landing page is `docs/app/(home)/page.tsx`. Documentation pages live in `docs/content/` as MDX files, served under `/doc`. The sidebar order is set in `docs/content/_meta.ts`.
+
+## License
+
+Electron AppStack is free, source-available software under the [Electron AppStack License](LICENSE.md). You can use and modify it to build commercial apps and sell them, but not sell the boilerplate itself or publish it as a competing starter kit.
+
+The license is also published at [electron-appstack.com/doc/license](https://electron-appstack.com/doc/license), from `docs/content/license.mdx`: keep it in sync with `LICENSE.md`.

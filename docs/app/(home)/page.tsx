@@ -349,8 +349,8 @@ const pillars: {
   {
     title: '100% free',
     description:
-      'No license fee, no subscription, no paid tier. Copy the template once and every line of code is yours to change and sell.',
-    href: '/doc/getting-started',
+      'No license fee, no subscription, no paid tier. Copy the template once, change every line of code and sell the apps you build with it.',
+    href: '/doc/license',
     icon: 'gift',
     accent: 'lime',
     figure: '$0'
@@ -548,6 +548,19 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
     question: 'Is Electron AppStack really free?',
     answer:
       'Yes. The boilerplate is free, with no paid tier. LicenseManager is free up to 100 active licenses, and Stripe only charges a fee on the payments you receive.'
+  },
+  {
+    question: 'What does the license allow?',
+    answer:
+      'Electron AppStack is free, source-available software. You can use and modify it to build commercial apps, and sell those apps and their installers. You cannot sell the boilerplate itself as a template, or publish a repackaged or lightly modified version of it as a competing starter kit.',
+    content: (
+      <>
+        Electron AppStack is free, source-available software. You can use and modify it to build
+        commercial apps, and sell those apps and their installers. You cannot sell the boilerplate
+        itself as a template, or publish a repackaged or lightly modified version of it as a
+        competing starter kit. Read the <Link href="/doc/license">full license</Link>.
+      </>
+    )
   },
   {
     question: 'What is a fullstack Electron boilerplate?',
@@ -1101,6 +1114,7 @@ export default function HomePage() {
             <Link href="/doc">Documentation</Link>
             <Link href="/doc/licensing">Licensing</Link>
             <Link href="/doc/releasing">Releasing</Link>
+            <Link href="/doc/license">License</Link>
             <a href={githubUrl}>GitHub</a>
           </nav>
         </div>

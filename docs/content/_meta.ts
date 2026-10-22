@@ -17,5 +17,6 @@ export default {
   licensing: 'Licensing',
   'source-protection': 'Source Code Protection',
   '-- More': { type: 'separator', title: 'More' },
-  'ai-agents': 'AI Agents'
+  'ai-agents': 'AI Agents',
+  license: 'License'
 }
