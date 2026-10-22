@@ -10,5 +10,6 @@
   "dark": "Dark",
   "settings": "Settings…",
   "checkForUpdates": "Check for Updates…",
-  "learnMore": "Learn More"
+  "learnMore": "Learn More",
+  "about": "About {{name}}"
 }

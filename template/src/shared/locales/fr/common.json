@@ -33,6 +33,102 @@
   },
   "update": {
     "downloaded": "La version {{version}} est prête à être installée.",
-    "restart": "Redémarrer"
+    "restart": "Redémarrer",
+    "notAllowed": "La version {{version}} est disponible, mais votre licence ne l'inclut pas."
+  },
+  "duration": {
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "hours_one": "{{count}} heure",
+    "hours_other": "{{count}} heures",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes"
+  },
+  "license": {
+    "activateTitle": "Activer {{name}}",
+    "activateDescription": "Saisissez la clé de licence reçue dans votre e-mail d'achat.",
+    "key": "Clé de licence",
+    "keyPlaceholder": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+    "activate": "Activer",
+    "activating": "Activation…",
+    "buy": "Acheter une licence",
+    "renew": "Renouveler la licence",
+    "upgrade": "Mettre à niveau la licence",
+    "manage": "Gérer la licence",
+    "checkAgain": "Vérifier à nouveau",
+    "renewed": "J'ai renouvelé ma licence",
+    "checking": "Vérification de votre licence…",
+    "anotherKey": "Ou saisissez une autre clé de licence",
+    "testProduct": "Version de développement : utilisez une clé de test (TEST-…).",
+    "states": {
+      "INVALID_KEY": {
+        "title": "Clé de licence non reconnue",
+        "description": "La clé de licence {{key}} n'existe pas. Vérifiez que vous l'avez copiée en entier depuis votre e-mail d'achat."
+      },
+      "EXPIRED": {
+        "title": "Votre licence a expiré",
+        "description": "Renouvelez votre licence pour continuer à utiliser {{name}}, puis cliquez sur « J'ai renouvelé ma licence »."
+      },
+      "VERSION_NOT_ALLOWED": {
+        "title": "Cette version n'est pas incluse",
+        "description": "Votre licence inclut {{name}} jusqu'à la version {{version}}. Réinstallez cette version, ou mettez à niveau votre licence pour utiliser la version {{current}}.",
+        "descriptionNone": "Votre licence n'inclut pas la version {{current}} de {{name}}. Mettez à niveau votre licence pour l'utiliser.",
+        "descriptionOffline": "Votre licence n'inclut pas la version {{current}} de {{name}}. Mettez à niveau votre licence, ou connectez-vous à Internet et vérifiez à nouveau."
+      },
+      "MACHINE_LIMIT_REACHED": {
+        "title": "Trop d'ordinateurs",
+        "description": "Votre licence est déjà utilisée sur le nombre maximum d'ordinateurs. Désactivez-en un depuis votre compte, puis cliquez sur « Vérifier à nouveau »."
+      },
+      "OFFLINE_EXPIRED": {
+        "title": "Connectez-vous à Internet",
+        "description": "{{name}} doit vérifier votre licence en ligne. Connectez-vous à Internet, puis cliquez sur « Vérifier à nouveau »."
+      },
+      "CLOCK_TAMPERED": {
+        "title": "Vérifiez la date et l'heure",
+        "description": "La date et l'heure de votre ordinateur semblent incorrectes. Activez « Régler la date et l'heure automatiquement » dans les réglages du système, puis connectez-vous à Internet."
+      }
+    },
+    "errors": {
+      "not_found": "Cette clé de licence n'a pas été reconnue. Vérifiez que vous l'avez copiée en entier depuis votre e-mail d'achat.",
+      "license_expired": "Cette licence a expiré. Renouvelez-la pour utiliser {{name}}.",
+      "version_not_allowed": "Cette licence inclut {{name}} jusqu'à la version {{version}}. Mettez-la à niveau pour utiliser la version {{current}}.",
+      "version_not_allowed_none": "Cette licence n'inclut pas la version {{current}} de {{name}}. Mettez-la à niveau pour utiliser cette version.",
+      "machine_limit_reached": "Cette licence est déjà utilisée sur le nombre maximum d'ordinateurs. Désactivez-en un depuis votre compte pour l'utiliser ici.",
+      "plan_limit_exceeded": "L'activation est temporairement indisponible. Réessayez plus tard, ou contactez le support.",
+      "validation_error": "Saisissez une clé de licence valide.",
+      "internal_error": "L'activation a échoué. Réessayez dans quelques minutes.",
+      "network_error": "Impossible de joindre le serveur de licences. Vérifiez votre connexion Internet et réessayez.",
+      "invalid_response": "L'activation a échoué. Vérifiez que la date et l'heure de votre ordinateur sont correctes.",
+      "unknown": "L'activation a échoué. Réessayez, ou contactez le support."
+    },
+    "stateLabels": {
+      "LOADING": "Vérification…",
+      "MISSING_KEY": "Non activée",
+      "ACTIVE": "Active",
+      "INVALID_KEY": "Clé non reconnue",
+      "EXPIRED": "Expirée",
+      "VERSION_NOT_ALLOWED": "Version non incluse",
+      "MACHINE_LIMIT_REACHED": "Trop d'ordinateurs",
+      "OFFLINE_EXPIRED": "Vérification impossible hors ligne",
+      "CLOCK_TAMPERED": "Date et heure incorrectes"
+    },
+    "offlineBanner": "Vous êtes hors ligne. Connectez-vous à Internet d'ici {{duration}} pour continuer à utiliser {{name}}."
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "license": "Licence",
+    "key": "Clé",
+    "noKey": "Aucune",
+    "copy": "Copier la clé de licence",
+    "copied": "Copiée",
+    "status": "Statut",
+    "verification": "Vérification",
+    "online": "Vérifiée en ligne",
+    "offline": "Hors ligne, fonctionne encore {{duration}}",
+    "offlineUntil": "Jusqu'au {{date}}",
+    "offlineNone": "Hors ligne, vérification impossible",
+    "testProduct": "Licence de test (version de développement)",
+    "clockTampered": "La date et l'heure de votre ordinateur semblent incorrectes.",
+    "disabled": "Les licences ne sont pas configurées."
   }
 }

@@ -10,5 +10,6 @@
   "dark": "Sombre",
   "settings": "Réglages…",
   "checkForUpdates": "Rechercher les mises à jour…",
-  "learnMore": "En savoir plus"
+  "learnMore": "En savoir plus",
+  "about": "À propos de {{name}}"
 }

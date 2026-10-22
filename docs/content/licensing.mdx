@@ -1,0 +1,484 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Licensing
+
+Sell your app with license keys. The template integrates
+[LicenseManager](https://licensemanager.dev) with its
+[Electron SDK](https://licensemanager.dev/docs/electron): customers enter the key
+from their purchase email once, and the app checks it in the background from then
+on, online or offline.
+
+- On launch, the app opens if the license is valid, and an **activation window**
+  otherwise. It explains every problem (expired license, too many computers,
+  version not included, offline for too long…) and what to do about it.
+- If the license is refused while the app runs (it expired, or was revoked), the
+  main window is replaced by the activation window. It comes back as soon as the
+  license is valid again.
+- The app keeps working **offline** for as long as your policy allows (one week
+  by default), and warns the user before that time runs out.
+- The **auto updater** only downloads the versions the license includes. When the
+  newest version is not included, it downloads the latest one that is.
+- The **About window** shows the license: the key with its end hidden and a copy
+  button, its status, the offline time left and a link to manage it.
+
+<Callout>
+  Licensing is **disabled** until you set your product id and public key in
+  `src/main/license/config.ts`: the app opens directly, and updates are not
+  gated. Nothing changes for apps that don't sell licenses.
+</Callout>
+
+LicenseManager is free up to 100 active licenses, with no credit card required.
+See [pricing](https://licensemanager.dev/pricing) and
+[plans and billing](https://licensemanager.dev/docs/account/billing).
+
+## Set up your account
+
+<Steps>
+
+### Create an account
+
+[Sign up](https://app.licensemanager.dev/signup) for LicenseManager. Your
+account belongs to an **organization**, which holds your products, your team and
+the key that signs every license.
+
+### Create your product
+
+Right after sign-up, the onboarding asks you to create your first product: give
+it the name of your app. See
+[Products](https://licensemanager.dev/docs/concepts/products).
+
+A **test product** is created alongside it automatically, with the same name and
+settings. Its keys start with `TEST-`. Development builds use it, so you can create
+licenses, expire them and delete them without touching real customers. See
+[Test mode](https://licensemanager.dev/docs/concepts/test-mode).
+
+### Set up the policy
+
+The onboarding then walks you through the product's default **policy**: the
+settings each new license starts with. Choose:
+
+- **Duration**: empty for perpetual licenses, or a number of months for
+  subscriptions.
+- **Max machines**: how many computers a license can be used on at a time, e.g.
+  `2`.
+- **Max offline duration**: how long the app works without reaching
+  LicenseManager. The one week default value works fine. This lets your users use the app on a plane or abroad for instance.
+- **Updates**: free updates, updates for a limited time (e.g. one year), no
+  updates, or up to a fixed version. The [auto updater](#updates) follows it.
+
+You can change it later in **Policies**, but changes only apply to new
+licenses. See
+[Policies](https://licensemanager.dev/docs/concepts/policies) and
+[Releases and version locks](https://licensemanager.dev/docs/concepts/releases#version-locks).
+
+### Enable the customer portal
+
+The **Manage license** buttons of the app open the
+[customer portal](https://licensemanager.dev/docs/customer-portal), where
+customers sign in with their email to see their licenses and deactivate the
+computers they no longer use. It is off by default: open the product
+**Settings**, check **Enable the customer portal** and save. You can also set
+your logo and colors there
+([customizing the portal](https://licensemanager.dev/docs/customer-portal/customizing)).
+
+Do it for the test product too.
+
+### Copy your product ids and public key
+
+Open **Security** in the sidebar. It lists the id of every product, and the
+**public key** of your organization: the app uses it to check that licenses were
+signed by LicenseManager. Paste them in `src/main/license/config.ts`:
+
+```ts filename="src/main/license/config.ts"
+export const PRODUCT_ID = 'x7Kp2QaZ'
+
+export const TEST_PRODUCT_ID = 't3Hw9LmB'
+
+export const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEA…
+-----END PUBLIC KEY-----`
+
+export const PURCHASE_URL = 'https://acme.com/buy'
+```
+
+The public key is not a secret: it can only verify licenses, not create them.
+Copy the whole block, including the `BEGIN` and `END` lines.
+
+<Callout type="warning">
+  Keep these values hard-coded. Never read them from a file next to the app, an
+  environment variable or a server: a customer could point the app to their own
+  product and key. The main process is compiled to bytecode in production builds,
+  see [Source Code Protection](/doc/source-protection).
+</Callout>
+
+### Try it
+
+Create a license in the **test** product: open **Licenses**, click **New
+license**, enter your email and create it. Copy its `TEST-…` key, then run
+`npm run dev`. The activation window opens: paste the key and click
+**Activate**. The main window opens, and **About** in the app menu (macOS) or
+the Help menu (Windows, Linux) shows the license.
+
+The license page of the dashboard now lists your computer in its **Machines**
+tab, and each validation in its **Validations** tab.
+
+### Record your releases
+
+When the newest version is not included in a license, LicenseManager tells the
+app the latest version that is, picked among the **releases** you recorded. The
+release workflow records each version it publishes, once you give it access:
+
+1. In LicenseManager, open **API keys** and create a key, e.g. `GitHub release`.
+   It is shown once: copy it.
+2. In your GitHub repository, open **Settings → Secrets and variables →
+   Actions**. Add the `LICENSEMANAGER_API_KEY` **secret** with the key, and the
+   `LICENSEMANAGER_PRODUCT_ID` **variable** with your live product id.
+
+The **Record the release in LicenseManager** step of
+`.github/workflows/release.yml` then runs after each release is published. You
+can also record versions by hand in the **Releases** page of the dashboard.
+Record the version of your app that is already out before you ship licensing.
+
+<Callout type="warning">
+  The API key can create and delete licenses: keep it in GitHub secrets, and
+  never put it in the app. See
+  [API authentication](https://licensemanager.dev/docs/api/authentication).
+</Callout>
+
+### Sell licenses
+
+Customers get their key by email when you create their license with **Email the
+key to the customer** checked. To sell automatically, connect your Stripe
+account: a license is created and emailed for each purchase. See
+[Stripe](https://licensemanager.dev/docs/stripe) and
+[selling with Stripe](https://licensemanager.dev/docs/guides/selling-with-stripe).
+
+Set `PURCHASE_URL` to your checkout or pricing page: the activation window shows
+**Buy a license** before activation, **Renew license** when it expired, and
+**Upgrade license** when the version is not included. Leave it empty to hide
+these buttons.
+
+</Steps>
+
+## Configuration
+
+Everything is in `src/main/license/config.ts`:
+
+| Constant          | Description                                                                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRODUCT_ID`      | Id of your live product, used by packaged builds. Licensing is disabled while it is empty                                                    |
+| `TEST_PRODUCT_ID` | Id of your test product, used by `npm run dev`. Leave empty to use the live product in development too                                       |
+| `PUBLIC_KEY`      | Public key of your organization, from the **Security** page. Licensing is disabled while it is empty                                         |
+| `PURCHASE_URL`    | Your checkout or pricing page, opened by the **Buy**, **Renew** and **Upgrade** buttons. Empty hides them                                     |
+
+The test and live products share the public key: the product id is what keeps
+`TEST-` keys from unlocking a release build. Packaged builds always use
+`PRODUCT_ID` (`app.isPackaged` decides, not something a customer can set).
+
+The code lives in:
+
+| File                                          | Role                                                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `src/main/license/index.ts`                   | Creates the `LicenseManager`, activates keys, opens the portal, checks update versions     |
+| `src/main/window.ts`                          | Shows the main window or the activation window depending on the license (`showAppWindow`) |
+| `src/main/updater.ts`                         | Only downloads the versions the license includes                                           |
+| `src/main/trpc/routers/license.ts`            | Procedures used by the activation and About windows                                        |
+| `src/shared/license.ts`                       | Types shared with the renderer, key masking                                                |
+| `src/renderer/src/routes/activate.tsx`        | Activation window                                                                          |
+| `src/renderer/src/routes/about.tsx`           | About window                                                                               |
+| `src/renderer/src/components/license-banner.tsx` | Offline warning in the main window                                                      |
+
+## What the user sees
+
+### On launch
+
+The SDK reads the stored key and the **token** saved by the last validation: a
+license signed by LicenseManager, valid for the max offline duration of the
+policy.
+
+- **A valid token**: the main window opens right away, and the license is
+  validated online in the background.
+- **A key but no valid token** (e.g. first launch after the offline time ran
+  out): the app validates online, retrying for up to 30 seconds. After 1.5
+  seconds, the activation window opens with "Checking your license…", replaced
+  by the main window once the license is validated.
+- **No key**: the activation window asks for one.
+
+The app is unlocked only in the `ACTIVE` state. Every other state shows the
+activation window, with a message and the actions that fix it. A new key can be
+entered in every state.
+
+| State                   | When                                                                         | The activation window shows                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `LOADING`               | The license is being validated on launch                                     | Checking your license…                                                                                               |
+| `MISSING_KEY`           | No key was ever activated                                                    | The key input, and **Buy a license**                                                                                 |
+| `INVALID_KEY`           | LicenseManager doesn't know the stored key (e.g. the license was deleted)    | The masked key, and the key input                                                                                    |
+| `EXPIRED`               | The license expiration date has passed                                       | **Renew license**, and **I renewed my license** to validate again                                                    |
+| `VERSION_NOT_ALLOWED`   | The license doesn't include this version of the app                          | The latest version the license includes, **Upgrade license**, **Manage license**, **Check again**                     |
+| `MACHINE_LIMIT_REACHED` | The license is active on its maximum number of computers, not including this one | **Manage license** to deactivate a computer in the portal, then **Check again**                                  |
+| `OFFLINE_EXPIRED`       | LicenseManager can't be reached, and the stored token has expired             | Connect to the internet, **Check again**. It also checks again as soon as the computer is back online                |
+| `CLOCK_TAMPERED`        | LicenseManager can't be reached, and the computer clock was set back or is more than 5 minutes off | Turn on automatic date and time, connect to the internet                                    |
+
+See [License states](https://licensemanager.dev/docs/electron/license-states).
+
+### Activation errors
+
+Activating a key never changes the current state when it fails: the error is
+shown under the input.
+
+| Error                   | Message                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `validation_error`      | Enter a valid license key. (empty key, or longer than 255 characters)                               |
+| `not_found`             | This license key wasn't recognized. Check you copied it entirely from your purchase email.           |
+| `license_expired`       | This license expired. Renew it to use the app.                                                      |
+| `version_not_allowed`   | This license includes the app up to version X. Upgrade it to use version Y.                         |
+| `machine_limit_reached` | This license is already used on its maximum number of computers. Deactivate one in your account…    |
+| `plan_limit_exceeded`   | Activation is temporarily unavailable. (your LicenseManager organization is over its plan limits)   |
+| `internal_error`        | Activation failed. Try again in a few minutes.                                                      |
+| `network_error`         | Couldn't reach the license server. Check your internet connection and try again.                    |
+| `invalid_response`      | Activation failed. Check your computer's date and time are correct.                                 |
+
+Keys are case sensitive, and spaces around them are removed. A test key in a
+release build answers `not_found`. An `invalid_response` on every activation
+usually means a wrong `PUBLIC_KEY` or product id. See
+[Activating a license](https://licensemanager.dev/docs/electron/activation).
+
+The messages are in `src/shared/locales/*/common.json`, under `license`.
+
+### While the app runs
+
+The SDK renews the token in the background, at two thirds of its lifetime, and
+validates again when the computer wakes up from sleep. When LicenseManager
+refuses the license (expired, deleted key, version no longer included), the main
+window closes and the activation window opens with the reason. When the license
+is fixed (**Check again**, a new key), the main window opens again.
+
+Network failures, LicenseManager errors and plan limits never lock the app: it
+keeps running on its stored token.
+
+### The About window
+
+**About** in the app menu (macOS) or the Help menu (Windows, Linux) opens a
+window with the app version and the license:
+
+- **Key**: the beginning of the key, e.g. `7KQ2M-X9•••-•••••-•••••-•••••`, and a
+  button that copies the full key. The full key is copied by the main process
+  and never sent to the renderer.
+- **Status**: the license state.
+- **Verification**: "Verified online", or the time left to work offline and its
+  date.
+- **Manage license**: opens the customer portal.
+- **Check again**: validates the license now.
+
+It replaces the native macOS About panel. Edit
+`src/renderer/src/routes/about.tsx` to add credits or links.
+
+## Offline use
+
+The app works offline until the stored token expires: the **max offline
+duration** of the policy after the last successful validation, or the license
+expiration if it comes first. When less than 3 days are left, a banner in the
+main window asks the user to connect to the internet. Change `WARNING_MS` in
+`src/renderer/src/components/license-banner.tsx` to warn earlier.
+
+Offline, the SDK retries after 5 minutes, then waits twice as long each time, up
+to one hour. To guarantee more offline time after each renewal (e.g. for users
+who travel), pass `minOfflineDurationMs` to `new LicenseManager()` in
+`src/main/license/index.ts`.
+
+An expired license, a deactivated machine or a shortened offline duration only
+reach the app when it validates online. See
+[Working offline](https://licensemanager.dev/docs/electron/offline) and
+[Clock tampering](https://licensemanager.dev/docs/electron/clock-tampering).
+
+## Updates
+
+With licensing enabled, `src/main/updater.ts` changes the auto updater:
+
+1. Updates are only checked while the license is active. Once the license is
+   activated or fixed, it checks right away.
+2. When a new version is found, the app asks LicenseManager if the license
+   includes it, before downloading anything.
+3. If it does, the update is downloaded and installed as usual.
+4. If it doesn't, LicenseManager answers with the latest version the license
+   includes (`latestAllowedVersion`, among your [recorded releases](#record-your-releases)).
+   If it is newer than the running version, the app downloads that one instead.
+5. Otherwise, the main window shows "Version X is available, but your license
+   doesn't include it", with a button to upgrade the license. **Check for
+   Updates…** shows the same in a dialog.
+
+If LicenseManager can't be reached, nothing is downloaded: the next check (every
+4 hours) tries again. If it refuses the license itself (expired, too many
+computers), the app validates the license and locks itself.
+
+<Callout type="warning">
+  Downloading an older version than the latest uses the files of its GitHub
+  release (`releases/download/v1.2.3/`), so it needs the default **GitHub**
+  publish provider and a public repository. With other providers, the app only
+  tells the user that the newest version is not included.
+</Callout>
+
+To check a version, the app calls the
+[validate-key](https://licensemanager.dev/docs/integrate/validating-keys)
+endpoint with that version. A successful answer records it as the version of the
+machine in the dashboard, even before it is installed. It counts as one API
+request, like each validation.
+
+Patch versions are never blocked: limits apply to the major and minor numbers
+(`2.3`). The app checks its own version on every validation too: a version
+installed by hand that the license doesn't include shows `VERSION_NOT_ALLOWED`.
+
+## Protecting features
+
+The windows follow the license, but code can always be called from the developer
+tools of a window. Features that require a license check it in the main
+process: use `licensedProcedure` instead of `publicProcedure` for their tRPC
+procedures. They throw a `FORBIDDEN` error while the license is not active. The
+todos of the template use it:
+
+```ts filename="src/main/trpc/routers/todos.ts"
+import { licensedProcedure, router } from '../trpc'
+
+export const todosRouter = router({
+  list: licensedProcedure.query(({ ctx }) => ctx.db.select().from(todos).all())
+})
+```
+
+Elsewhere in the main process, call `isLicenseActive()` from
+`src/main/license`. It returns `true` when licensing is disabled.
+
+## Customers and computers
+
+Each computer is identified by a **fingerprint**: a hash of the system machine
+id, combined with a random id stored on first launch. Reinstalling or updating
+the app keeps it. Reinstalling Windows or Linux, or a new computer, counts as a
+new machine. See [Machine fingerprint](https://licensemanager.dev/docs/electron/fingerprint).
+
+When customers move to a new computer and reach their maximum, they deactivate
+the old one in the portal (**Manage license**), then click **Check again**. You
+can also deactivate machines from the **Machines** tab of the license in the
+dashboard, or raise its max machines.
+
+To fix a license, open it in the dashboard: extend its expiration, change its
+updates or its max machines. The app picks up the change at its next validation,
+or right away with **Check again**. See
+[Licenses](https://licensemanager.dev/docs/concepts/licenses) and
+[Machines](https://licensemanager.dev/docs/concepts/machines).
+
+## Testing
+
+Use the test product to go through every state:
+
+| To test                 | Do                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `INVALID_KEY`           | Activate a key, then delete its license (deactivate its machine first)                                 |
+| `EXPIRED`               | Set the expiration of the license in the past, then **Check again** in the About window                |
+| `MACHINE_LIMIT_REACHED` | Set the max machines of the license to 1 and activate it on a second computer or virtual machine |
+| `VERSION_NOT_ALLOWED`   | Set the license updates to **Lock version** on a version older than `version` in `package.json`        |
+| Offline                 | Turn off Wi-Fi: the About window shows the time left. Set a short max offline duration to see it expire |
+| `CLOCK_TAMPERED`        | Offline, set your computer clock back                                                                  |
+
+Updates can only be tested with a packaged app: see [Auto Update](/doc/auto-update).
+
+The license is stored per product in the system keychain (service
+`dev.licensemanager.sdk`), and in files as a fallback. Uninstalling the app
+keeps it. To start over in development, delete it on macOS with:
+
+```sh
+for name in licenseKey licenseToken installId lastSeen; do
+  security delete-generic-password -s dev.licensemanager.sdk -a "t3Hw9LmB:$name"
+done
+namespace=$(node -e 'console.log(require("crypto").createHash("sha256").update("dev.licensemanager.sdk:t3Hw9LmB").digest("hex").slice(0, 32))')
+rm -rf ~/Library/Application\ Support/.$namespace ~/Library/Caches/.$namespace
+```
+
+Replace `t3Hw9LmB` with your test product id. Commands for Windows and
+Linux are in [Stored data](https://licensemanager.dev/docs/electron/storage).
+Don't ask customers to do this: it changes their fingerprint, so their computer
+counts as a new machine.
+
+## Packaging
+
+The SDK stores licenses in the system keychain with
+[@napi-rs/keyring](https://www.npmjs.com/package/@napi-rs/keyring), a native
+module installed by npm for the current platform and architecture only. Without
+it, the SDK falls back to files, silently.
+
+- Install with `npm install` or `npm ci`, without `--omit=optional`.
+- The release workflow builds two architectures on each macOS and Windows runner:
+  its **Install the keychain module for every architecture** step adds the
+  module of the other one.
+- To check a build, activate a license in the packaged app, then look for
+  `dev.licensemanager.sdk` in Keychain Access (macOS) or the Credential Manager
+  (Windows).
+
+## Don't need licensing?
+
+If your app is free, or you sell it another way, you can leave licensing
+disabled: keep `PRODUCT_ID` or `PUBLIC_KEY` empty in
+`src/main/license/config.ts`. The app opens directly, updates are not gated, and
+the About window says licensing is not configured.
+
+You can also remove the licensing code entirely, to keep the codebase and the
+app smaller. Nothing else in the template depends on it. Give this prompt to
+your coding assistant (Claude Code, Cursor, Codex…):
+
+```md filename="Prompt"
+Remove licensing (licensemanager.dev) from this Electron app. Keep every other
+feature working. Follow these steps:
+
+1. Delete `src/main/license/`, `src/main/trpc/routers/license.ts`,
+   `src/shared/license.ts`, `src/renderer/src/lib/license.ts`,
+   `src/renderer/src/components/license-banner.tsx` and
+   `src/renderer/src/routes/activate.tsx`.
+2. In `src/main/trpc/router.ts`, remove the `license` router.
+3. In `src/main/trpc/trpc.ts`, remove `licensedProcedure` and the
+   `isLicenseActive` import. Replace every `licensedProcedure` with
+   `publicProcedure` (e.g. in `src/main/trpc/routers/todos.ts`).
+4. In `src/main/events.ts`, remove the `licenseChanged` event.
+5. In `src/main/window.ts`, remove the activation window
+   (`createActivationWindow`, `activationWindow`). `showAppWindow` and
+   `focusAppWindow` only show and focus the main window. Remove the license
+   from the comment of `showAboutWindow`.
+6. In `src/main/index.ts`, remove `setupLicense`, `waitForLicense` and the
+   `licenseChanged` listener: call `showAppWindow()` directly.
+7. In `src/main/updater.ts`, remove the license gating: the license check,
+   `checkVersionAllowed`, the fallback to the latest allowed version
+   (`pinFeed`, `restoreFeed`, `readPublishConfig`, `pinned`), the
+   `not-allowed` dialog and the `licenseChanged` listener. Set
+   `autoUpdater.autoDownload = true` back, or call `downloadUpdate()` as soon
+   as an update is available. Keep the "is up to date" and error dialogs of
+   manual checks. Copy `compareVersions` here if it is still used.
+8. In `src/shared/updater.ts`, remove the `license-required` and
+   `not-allowed` states.
+9. In `src/renderer/src/components/update-banner.tsx`, remove the
+   `not-allowed` banner, `useLicense` and the `license` mutations.
+10. In `src/renderer/src/routes/__root.tsx`, remove `<LicenseBanner />`.
+11. In `src/renderer/src/routes/about.tsx`, remove the license section and its
+    loader: the About window only shows the app name, logo and version.
+12. In every `src/shared/locales/*/common.json`, remove the `license` and
+    `duration` keys, `update.notAllowed`, and the license keys of `about`
+    (keep `about.version`). Check no other code uses `duration.*`.
+13. In `.github/workflows/release.yml`, remove the "Install the keychain module
+    for every architecture" and "Record the release in LicenseManager" steps.
+14. Uninstall `@licenseman/electron` with `npm uninstall @licenseman/electron`.
+15. In `AGENTS.md` and `README.md`, remove the mentions of licensing,
+    `license/` and `licensedProcedure`. In `.claude/skills/add-route/SKILL.md`,
+    only mention `about.tsx` as an example of a standalone route.
+16. Run `npm run dev` once to regenerate `src/renderer/src/routeTree.gen.ts`
+    without the `/activate` route.
+17. Search the codebase for `licen` (case-insensitive) to
+    remove any leftover, then run `npm run check:fix` and `npm run typecheck`
+    and fix every error.
+```
+
+## Learn more
+
+- [Electron SDK](https://licensemanager.dev/docs/electron), and its
+  [API reference](https://licensemanager.dev/docs/electron/reference)
+- [Validation and renewal](https://licensemanager.dev/docs/electron/validation)
+- [Renderer and IPC](https://licensemanager.dev/docs/electron/renderer)
+- [Concepts](https://licensemanager.dev/docs/concepts): products, policies,
+  licenses, machines, releases
+- [Desktop app guide](https://licensemanager.dev/docs/guides/desktop-app) and
+  [trial licenses](https://licensemanager.dev/docs/guides/trial-licenses)

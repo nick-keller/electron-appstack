@@ -33,6 +33,102 @@
   },
   "update": {
     "downloaded": "Version {{version}} is ready to install.",
-    "restart": "Restart"
+    "restart": "Restart",
+    "notAllowed": "Version {{version}} is available, but your license doesn't include it."
+  },
+  "duration": {
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes"
+  },
+  "license": {
+    "activateTitle": "Activate {{name}}",
+    "activateDescription": "Enter the license key from your purchase email.",
+    "key": "License key",
+    "keyPlaceholder": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+    "activate": "Activate",
+    "activating": "Activating…",
+    "buy": "Buy a license",
+    "renew": "Renew license",
+    "upgrade": "Upgrade license",
+    "manage": "Manage license",
+    "checkAgain": "Check again",
+    "renewed": "I renewed my license",
+    "checking": "Checking your license…",
+    "anotherKey": "Or enter another license key",
+    "testProduct": "Development build: use a test license key (TEST-…).",
+    "states": {
+      "INVALID_KEY": {
+        "title": "License key not recognized",
+        "description": "The license key {{key}} doesn't exist. Check you copied it entirely from your purchase email."
+      },
+      "EXPIRED": {
+        "title": "Your license expired",
+        "description": "Renew your license to keep using {{name}}, then click “I renewed my license”."
+      },
+      "VERSION_NOT_ALLOWED": {
+        "title": "This version is not included",
+        "description": "Your license includes {{name}} up to version {{version}}. Reinstall that version, or upgrade your license to use version {{current}}.",
+        "descriptionNone": "Your license doesn't include version {{current}} of {{name}}. Upgrade your license to use it.",
+        "descriptionOffline": "Your license doesn't include version {{current}} of {{name}}. Upgrade your license, or connect to the internet and check again."
+      },
+      "MACHINE_LIMIT_REACHED": {
+        "title": "Too many computers",
+        "description": "Your license is already used on its maximum number of computers. Deactivate one in your account, then click “Check again”."
+      },
+      "OFFLINE_EXPIRED": {
+        "title": "Connect to the internet",
+        "description": "{{name}} needs to verify your license online. Connect to the internet, then click “Check again”."
+      },
+      "CLOCK_TAMPERED": {
+        "title": "Check your date and time",
+        "description": "Your computer's date and time look wrong. Turn on “Set date and time automatically” in your system settings, then connect to the internet."
+      }
+    },
+    "errors": {
+      "not_found": "This license key wasn't recognized. Check you copied it entirely from your purchase email.",
+      "license_expired": "This license expired. Renew it to use {{name}}.",
+      "version_not_allowed": "This license includes {{name}} up to version {{version}}. Upgrade it to use version {{current}}.",
+      "version_not_allowed_none": "This license doesn't include version {{current}} of {{name}}. Upgrade it to use this version.",
+      "machine_limit_reached": "This license is already used on its maximum number of computers. Deactivate one in your account to use it here.",
+      "plan_limit_exceeded": "Activation is temporarily unavailable. Try again later, or contact support.",
+      "validation_error": "Enter a valid license key.",
+      "internal_error": "Activation failed. Try again in a few minutes.",
+      "network_error": "Couldn't reach the license server. Check your internet connection and try again.",
+      "invalid_response": "Activation failed. Check your computer's date and time are correct.",
+      "unknown": "Activation failed. Try again, or contact support."
+    },
+    "stateLabels": {
+      "LOADING": "Checking…",
+      "MISSING_KEY": "Not activated",
+      "ACTIVE": "Active",
+      "INVALID_KEY": "Key not recognized",
+      "EXPIRED": "Expired",
+      "VERSION_NOT_ALLOWED": "Version not included",
+      "MACHINE_LIMIT_REACHED": "Too many computers",
+      "OFFLINE_EXPIRED": "Can't verify offline",
+      "CLOCK_TAMPERED": "Wrong date and time"
+    },
+    "offlineBanner": "You're offline. Connect to the internet within {{duration}} to keep using {{name}}."
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "license": "License",
+    "key": "Key",
+    "noKey": "None",
+    "copy": "Copy license key",
+    "copied": "Copied",
+    "status": "Status",
+    "verification": "Verification",
+    "online": "Verified online",
+    "offline": "Offline, works for {{duration}} more",
+    "offlineUntil": "Until {{date}}",
+    "offlineNone": "Offline, can't verify",
+    "testProduct": "Test license (development build)",
+    "clockTampered": "Your computer's date and time look wrong.",
+    "disabled": "Licensing is not configured."
   }
 }

@@ -25,6 +25,7 @@ npm run dev
 - [Biome](https://biomejs.dev/) for linting and formatting
 - [Changesets](https://github.com/changesets/changesets) for versions and changelog
 - [electron-builder](https://www.electron.build/) with GitHub Actions to build, sign, notarize and publish, and auto update
+- License keys with [licensemanager.dev](https://licensemanager.dev): activation window, offline use, license details in the About window, and updates limited to the versions the license includes. Disabled until you set your product id in `src/main/license/config.ts` (see [Licensing](https://electron-appstack.com/doc/licensing))
 - Source code protection: main process shipped as V8 bytecode, locked down with Electron fuses and ASAR integrity
 - `AGENTS.md` and skills in `.claude/skills/` so coding agents follow the conventions
 
@@ -54,7 +55,7 @@ npm run dev
 ├── resources/            # Runtime files for the main process
 ├── scripts/              # Development scripts
 └── src/
-    ├── main/             # Main process: window, menu, tRPC routers, database, config, updater
+    ├── main/             # Main process: windows, menu, tRPC routers, database, config, updater, license
     ├── preload/          # Exposes tRPC to the renderer
     ├── shared/           # Code and translations shared by main and renderer
     └── renderer/         # React app (routes, components, public/images)

@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import type { Config } from '@shared/config'
+import type { LicenseInfo } from '@shared/license'
 import type { UpdateStatus } from '@shared/updater'
 
 export type AppEvents = {
@@ -7,6 +8,7 @@ export type AppEvents = {
   navigate: [to: string]
   configChanged: [config: Config]
   updateStatus: [status: UpdateStatus]
+  licenseChanged: [info: LicenseInfo]
 }
 
 /** Main process events, forwarded to the renderer with tRPC subscriptions. */

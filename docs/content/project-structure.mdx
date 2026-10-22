@@ -24,13 +24,14 @@ export const Name = ({ name, note }) => (
     <FileTree.Folder name="src" defaultOpen>
       <FileTree.Folder name={<Name name="main" note="Main process (Node.js)" />} defaultOpen>
         <FileTree.File name={<Name name="index.ts" note="App lifecycle" />} />
-        <FileTree.File name={<Name name="window.ts" note="Main window (size and position are remembered)" />} />
+        <FileTree.File name={<Name name="window.ts" note="Main, activation and About windows" />} />
         <FileTree.File name={<Name name="menu.ts" note="Native menu" />} />
         <FileTree.File name={<Name name="updater.ts" note="Auto updater" />} />
         <FileTree.File name={<Name name="events.ts" note="Typed event bus, forwarded to the renderer" />} />
         <FileTree.File name={<Name name="paths.ts" note="Paths of resources/ and drizzle/ in dev and production" />} />
         <FileTree.Folder name={<Name name="config" note="zod-validated electron-store" />} />
         <FileTree.Folder name={<Name name="db" note="Drizzle schema and client" />} />
+        <FileTree.Folder name={<Name name="license" note="License activation (licensemanager.dev)" />} />
         <FileTree.Folder name={<Name name="trpc" note="tRPC setup, router and procedures" />} />
       </FileTree.Folder>
       <FileTree.Folder name="preload" defaultOpen>
@@ -39,6 +40,7 @@ export const Name = ({ name, note }) => (
       <FileTree.Folder name={<Name name="shared" note="Imported by main and renderer" />} defaultOpen>
         <FileTree.File name={<Name name="config.ts" note="Config schema" />} />
         <FileTree.File name={<Name name="i18n.ts" note="Translation resources" />} />
+        <FileTree.File name={<Name name="license.ts" note="License types and helpers" />} />
         <FileTree.Folder name={<Name name="locales" note="Translation files" />} />
       </FileTree.Folder>
       <FileTree.Folder name={<Name name="renderer" note="Renderer process (browser)" />} defaultOpen>

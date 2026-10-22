@@ -3,6 +3,7 @@ import { app, Menu, type MenuItemConstructorOptions, shell } from 'electron'
 import { config } from './config'
 import { appEvents } from './events'
 import { checkForUpdates } from './updater'
+import { showAboutWindow } from './window'
 
 const isMac = process.platform === 'darwin'
 
@@ -17,6 +18,11 @@ export function updateMenu(): void {
     accelerator: 'CmdOrCtrl+,',
     click: () => appEvents.emit('navigate', '/settings')
   }
+  // Replaces the native About panel, to show the license too
+  const about: MenuItemConstructorOptions = {
+    label: t.about.replace('{{name}}', app.name),
+    click: () => showAboutWindow()
+  }
   const checkUpdates: MenuItemConstructorOptions = {
     label: t.checkForUpdates,
     click: () => checkForUpdates(true)
@@ -28,7 +34,7 @@ export function updateMenu(): void {
           {
             label: app.name,
             submenu: [
-              { role: 'about' },
+              about,
               checkUpdates,
               { type: 'separator' },
               openSettings,
@@ -83,7 +89,8 @@ export function updateMenu(): void {
         {
           label: t.learnMore,
           click: () => shell.openExternal('https://electron-appstack.com')
-        }
+        },
+        ...(isMac ? [] : [{ type: 'separator' } as const, about])
       ]
     }
   ]

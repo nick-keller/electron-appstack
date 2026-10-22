@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import '../globals.css'
 
 export { metadata } from '../metadata'
 
@@ -7,7 +8,7 @@ export { metadata } from '../metadata'
 export default function HomeLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" dir="ltr">
-      <body style={{ margin: 0 }}>{children}</body>
+      <body style={{ margin: 0, background: '#09090b' }}>{children}</body>
     </html>
   )
 }

@@ -78,6 +78,21 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      # The license SDK keeps its data in the system keychain with a native module, which npm only
+      # installs for the runner's architecture. Add the other architecture built on this runner.
+      - name: Install the keychain module for every architecture
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          version=$(node -p "require('@napi-rs/keyring/package.json').version")
+          if [ "$RUNNER_OS" = macOS ]; then
+            targets="darwin-arm64 darwin-x64"
+          else
+            targets="win32-x64-msvc win32-arm64-msvc"
+          fi
+          npm install --no-save --force --no-audit --no-fund \
+            $(for target in $targets; do echo "@napi-rs/keyring-$target@$version"; done)
+
       - name: Prepare the App Store Connect API key
         if: runner.os == 'macOS' && env.APPLE_API_KEY_BASE64 != ''
         shell: bash
@@ -124,3 +139,22 @@ jobs:
             found { print }
           ' CHANGELOG.md > notes.md 2>/dev/null || true
           gh release edit "v$VERSION" --draft=false --notes-file notes.md
+
+      # Licensing: record the version in LicenseManager, so licenses that don't include the newest
+      # version are offered this one (`latestAllowedVersion`). Set the LICENSEMANAGER_PRODUCT_ID
+      # variable and the LICENSEMANAGER_API_KEY secret in the repository settings to enable it.
+      - name: Record the release in LicenseManager
+        if: vars.LICENSEMANAGER_PRODUCT_ID != ''
+        env:
+          LICENSEMANAGER_API_KEY: ${{ secrets.LICENSEMANAGER_API_KEY }}
+          PRODUCT_ID: ${{ vars.LICENSEMANAGER_PRODUCT_ID }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          status=$(curl -sS -o response.json -w '%{http_code}' -X POST \
+            "https://api.licensemanager.dev/v1/products/$PRODUCT_ID/releases" \
+            -H "x-api-key: $LICENSEMANAGER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"version\": \"$VERSION\"}")
+          cat response.json
+          # 409 version_taken: already recorded, e.g. when the workflow is re-run
+          [ "$status" = 201 ] || [ "$status" = 409 ]

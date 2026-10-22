@@ -1,9 +1,10 @@
 import { on } from 'node:events'
-import { initTRPC, type TRPCSubscriptionProcedure } from '@trpc/server'
+import { initTRPC, TRPCError, type TRPCSubscriptionProcedure } from '@trpc/server'
 import superjson from 'superjson'
 import { config } from '../config'
 import { getDb } from '../db/client'
 import { type AppEvents, appEvents } from '../events'
+import { isLicenseActive } from '../license'
 
 export function createContext() {
   return Promise.resolve({ db: getDb(), config })
@@ -19,6 +20,18 @@ const t = initTRPC.context<Context>().create({
 
 export const router = t.router
 export const publicProcedure = t.procedure
+
+/**
+ * A procedure that only runs while the license is active (or licensing is disabled). Use it for
+ * the features of the app: the main window is closed when the license is refused, but this also
+ * stops any other window from calling them.
+ */
+export const licensedProcedure = t.procedure.use(({ next }) => {
+  if (!isLicenseActive()) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'The license is not active' })
+  }
+  return next()
+})
 
 /**
  * Wraps an async generator so it can be returned from a subscription.

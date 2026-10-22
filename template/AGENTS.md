@@ -32,8 +32,9 @@ Before finishing a task, run `npm run check:fix` then `npm run typecheck` and fi
 ```
 src/main/            Main process (Node.js)
   index.ts           App lifecycle
-  window.ts menu.ts  Main window, native menu
-  updater.ts         Auto updater
+  window.ts menu.ts  Windows (main, activation, About), native menu
+  updater.ts         Auto updater, gated by the license
+  license/           License activation with licensemanager.dev (`config.ts` holds the product id)
   events.ts          Typed event bus, forwarded to the renderer by tRPC subscriptions
   config/            zod-validated electron-store (`config.get/set/onChange`)
   db/                Drizzle schema and client
@@ -59,6 +60,8 @@ scripts/             Development scripts (not shipped in the app)
 - Renderer data fetching uses TanStack Query with the tRPC options proxy:
   `useQuery(trpc.todos.list.queryOptions())`, `useMutation(trpc.todos.create.mutationOptions())`.
   Invalidate with `queryClient.invalidateQueries({ queryKey: trpc.todos.list.queryKey() })`.
+- Procedures behind the license use `licensedProcedure` instead of `publicProcedure`: they refuse to
+  run while the license is not active. Never send the full license key to the renderer.
 - Subscriptions must not return a bare async generator: use `appEventSubscription()` or wrap the
   generator with `ipcIterable()` (see `src/main/trpc/trpc.ts`).
 - Every user-visible string in the renderer goes through `t()`; add keys to **every** locale in

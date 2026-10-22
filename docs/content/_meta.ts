@@ -14,6 +14,7 @@ export default {
   '-- Shipping': { type: 'separator', title: 'Shipping' },
   releasing: 'Releasing',
   'auto-update': 'Auto Update',
+  licensing: 'Licensing',
   'source-protection': 'Source Code Protection',
   '-- More': { type: 'separator', title: 'More' },
   'ai-agents': 'AI Agents'

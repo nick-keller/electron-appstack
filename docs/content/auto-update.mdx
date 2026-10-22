@@ -13,6 +13,10 @@ releases created by the [release workflow](/doc/releasing).
   where to find it from `publish` in `electron-builder.ts`.
 - On startup, then every 4 hours, the app checks for a new version and
   downloads it in the background (`src/main/updater.ts`).
+- With [licensing](/doc/licensing#updates) enabled, updates are only checked
+  while the license is active, and a version is only downloaded if the license
+  includes it. Otherwise the latest version the license includes is downloaded
+  instead, if it is newer than the running one.
 - When the download is done, a banner offers to restart now. Otherwise the
   update is installed when the app quits.
 - **Check for Updates…** in the app menu (macOS) or the File menu (Windows,
@@ -29,6 +33,9 @@ type UpdateStatus =
   | { state: 'downloading'; percent: number }
   | { state: 'downloaded'; version: string }
   | { state: 'error'; message: string }
+  // With licensing enabled:
+  | { state: 'license-required' }
+  | { state: 'not-allowed'; version: string; latestAllowedVersion: string | null }
 ```
 
 `src/renderer/src/components/update-banner.tsx` shows how to use it.

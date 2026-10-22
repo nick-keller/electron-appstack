@@ -60,17 +60,17 @@ write the `#` yourself: `<Link to="/settings">` produces the right URL.
 
 ### Create a page
 
-Create `src/renderer/src/routes/about.tsx`:
+Create `src/renderer/src/routes/help.tsx`:
 
-```tsx filename="src/renderer/src/routes/about.tsx"
+```tsx filename="src/renderer/src/routes/help.tsx"
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/about')({
-  component: About
+export const Route = createFileRoute('/help')({
+  component: Help
 })
 
-function About() {
-  return <h1>About</h1>
+function Help() {
+  return <h1>Help</h1>
 }
 ```
 
@@ -85,8 +85,8 @@ Then link to it, for example from the navigation in `__root.tsx`:
 ```tsx
 import { Link } from '@tanstack/react-router'
 
-<Link to="/about" className="text-muted-foreground [&.active]:text-foreground">
-  About
+<Link to="/help" className="text-muted-foreground [&.active]:text-foreground">
+  Help
 </Link>
 ```
 
@@ -110,7 +110,7 @@ with a tRPC subscription.
 
 | File                       | URL                 | Notes                                               |
 | -------------------------- | ------------------- | --------------------------------------------------- |
-| `about.tsx`                | `/about`            |                                                     |
+| `help.tsx`                 | `/help`             |                                                     |
 | `notes/index.tsx`          | `/notes`            | `index` matches the folder itself                   |
 | `notes/$noteId.tsx`        | `/notes/:noteId`    | `$` marks a path parameter                          |
 | `notes/route.tsx`          | `/notes/*`          | Layout wrapping every route in `notes/`             |

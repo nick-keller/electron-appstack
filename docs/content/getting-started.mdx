@@ -55,14 +55,14 @@ different:
 
 | Setting | File | Used for |
 | ------- | ---- | -------- |
-| `productName` | `package.json` | The name people see: `app.getName()`, the macOS app menu, About panel and Dock, the `.app` bundle and `.exe` names, the Windows Start Menu shortcut and "Installed apps" entry, the Linux desktop entry, installer file names, and the [data folder](#the-data-folder) |
+| `productName` | `package.json` | The name people see: `app.getName()`, the macOS app menu and Dock, the `.app` bundle and `.exe` names, the Windows Start Menu shortcut and "Installed apps" entry, the Linux desktop entry, installer file names, and the [data folder](#the-data-folder) |
 | `name` | `package.json` | The npm package name, used when `productName` is missing. On Linux, also the executable and `.deb` package name. Lowercase, no spaces |
 | `<title>` | `src/renderer/index.html` | The window title: the title bar, the Windows and Linux taskbar button, the macOS Window menu and Mission Control |
 | `appId` | `electron-builder.ts` | The unique ID of the app: the macOS bundle identifier (used for code signing, notarization and permissions) and the Windows app ID (used for taskbar grouping, notifications and the uninstaller entry). Reverse domain, e.g. `com.acme.notes` |
 | `publish.owner`, `publish.repo` | `electron-builder.ts` | The GitHub repository where releases are uploaded and where the [auto updater](/doc/auto-update) looks for new versions |
-| `copyright` | `electron-builder.ts` | The macOS About panel and the Windows file properties |
+| `copyright` | `electron-builder.ts` | The macOS Get Info window and the Windows file properties |
 | `description`, `author` | `package.json` | Package metadata, shown by Linux package managers |
-| `appName` | `src/shared/locales/*/common.json` | A translated name for your own UI. Not used by the template |
+| `appName` | `src/shared/locales/*/common.json` | A translated name for your own UI, used by the [license](/doc/licensing) activation window |
 
 The window title only comes from `<title>`, not from `productName`. Keep them
 in sync, or set the title from code with `document.title` in the renderer.
