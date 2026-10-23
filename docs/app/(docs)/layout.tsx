@@ -1,4 +1,4 @@
-import { Head } from 'nextra/components'
+import { Banner, Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import { Footer, Layout, Navbar } from 'nextra-theme-docs'
 import type { ReactNode } from 'react'
@@ -38,6 +38,13 @@ const logo = (
 )
 
 const navbar = <Navbar logo={logo} projectLink="https://github.com/nick-keller/electron-appstack" />
+const banner = (
+  <Banner storageKey="star-on-github">
+    <a href="https://github.com/nick-keller/electron-appstack" target="_blank" rel="noreferrer">
+      Enjoying Electron AppStack? Give it a ⭐ on GitHub →
+    </a>
+  </Banner>
+)
 const footer = <Footer>© {new Date().getFullYear()} Electron AppStack</Footer>
 
 export default async function DocsLayout({ children }: { children: ReactNode }) {
@@ -46,6 +53,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
       <Head />
       <body>
         <Layout
+          banner={banner}
           navbar={navbar}
           footer={footer}
           pageMap={await getPageMap('/doc')}
