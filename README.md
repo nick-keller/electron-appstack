@@ -47,8 +47,11 @@ pnpm install
 | `pnpm check`         | Lint and check formatting with Biome            |
 | `pnpm check:fix`     | Fix lint and formatting issues                  |
 | `pnpm lock:template` | Regenerate `template/package-lock.json`         |
+| `pnpm update:boilerplates` | Refresh GitHub stats and Electron versions in `docs/data/boilerplates.json` |
 
 The landing page is `docs/app/(home)/page.tsx`. Documentation pages live in `docs/content/` as MDX files, served under `/doc`. The sidebar order is set in `docs/content/_meta.ts`.
+
+The comparison page (`/compare`) and the ranking page (`/best-electron-boilerplate`) are generated from `docs/data/boilerplates.json`: features and stack are curated by hand, stars, last commits and Electron versions are refreshed with `pnpm update:boilerplates`. Scores and rankings are computed in `docs/lib/boilerplates.ts`.
 
 ## License
 
