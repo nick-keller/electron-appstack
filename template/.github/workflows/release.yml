@@ -78,10 +78,11 @@ jobs:
       - run: npm ci
       # electron-vite starts Electron to compile bytecode. Ubuntu 24.04 blocks the unprivileged user
       # namespaces Chromium's sandbox needs, so Electron aborts unless they are allowed again.
+      # Electron also needs a display, which xvfb-run provides on the headless Linux runner.
       - name: Allow the Electron sandbox
         if: runner.os == 'Linux'
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - run: npm run build
+      - run: ${{ runner.os == 'Linux' && 'xvfb-run -a ' || '' }}npm run build
 
       # The license SDK keeps its data in the system keychain with a native module, which npm only
       # installs for the runner's architecture. Add the other architecture built on this runner.
