@@ -32,6 +32,7 @@ import {
 import styles from '../boilerplates.module.css'
 import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
+import { openGraphImages } from '../../metadata'
 
 const current = ranking.filter((b) => !isOutdated(b))
 const outdated = ranking.filter(isOutdated)
@@ -61,9 +62,10 @@ export const metadata: Metadata = {
     url: '/best-electron-boilerplate',
     siteName: 'Electron AppStack',
     title,
-    description
+    description,
+    images: openGraphImages
   },
-  twitter: { card: 'summary_large_image', title, description }
+  twitter: { card: 'summary_large_image', title, description, images: openGraphImages }
 }
 
 const weightLabels: Record<keyof typeof scoreWeights, string> = {

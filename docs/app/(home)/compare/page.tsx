@@ -33,6 +33,7 @@ import {
 import styles from '../boilerplates.module.css'
 import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
+import { openGraphImages } from '../../metadata'
 
 const title = 'How does Electron AppStack compare to other boilerplates?'
 const description = `Electron AppStack compared to ${others.length} Electron boilerplates, including ${others
@@ -53,9 +54,10 @@ export const metadata: Metadata = {
     url: '/compare',
     siteName: 'Electron AppStack',
     title,
-    description
+    description,
+    images: openGraphImages
   },
-  twitter: { card: 'summary_large_image', title, description }
+  twitter: { card: 'summary_large_image', title, description, images: openGraphImages }
 }
 
 const total = featureDefinitions.length

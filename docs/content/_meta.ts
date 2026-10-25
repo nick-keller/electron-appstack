@@ -11,6 +11,7 @@ export default {
   theming: 'Dark Mode',
   i18n: 'Translations',
   assets: 'Icons and Images',
+  testing: 'Unit Tests',
   '-- Shipping': { type: 'separator', title: 'Shipping' },
   releasing: 'Releasing',
   'auto-update': 'Auto Update',

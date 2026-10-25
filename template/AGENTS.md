@@ -10,7 +10,7 @@ Desktop app built with Electron AppStack. Read this file before changing the cod
 - **Database**: SQLite (`better-sqlite3`) with **Drizzle ORM**, migrations applied on startup
 - **Config**: `electron-store` wrapped with a zod schema (`src/main/config`)
 - **i18n**: i18next + react-i18next, JSON files in `src/shared/locales`
-- **Tooling**: TypeScript (strict), Biome (lint + format), Changesets (versioning), electron-builder (packaging, auto update)
+- **Tooling**: TypeScript (strict), Biome (lint + format), Vitest (unit tests), Changesets (versioning), electron-builder (packaging, auto update)
 - **Source protection**: production builds compile the main process to V8 bytecode and lock the app down with Electron fuses + ASAR integrity (`build.bytecode` in `electron.vite.config.ts`, `electronFuses` in `electron-builder.ts`). Do not remove either; keep sensitive logic in the main process (the renderer is not bytecode)
 
 ## Commands
@@ -20,12 +20,13 @@ Desktop app built with Electron AppStack. Read this file before changing the cod
 | `npm run dev` | Start the app. Renderer is hot reloaded, main and preload restart the app |
 | `npm run check` / `npm run check:fix` | Lint and format check / fix (Biome) |
 | `npm run typecheck` | Type check main, preload and renderer |
+| `npm test` / `npm run test:watch` | Run the unit tests once / in watch mode (Vitest) |
 | `npm run db:generate` | Generate a SQL migration after editing `src/main/db/schema.ts` |
 | `npm run db:reset` | Delete the development database. Quit the app first, it is recreated on next start |
 | `npm run changeset` | Describe a user-facing change for the changelog |
 | `npm run dist:dir` | Package the app locally (unsigned) into `dist/` |
 
-Before finishing a task, run `npm run check:fix` then `npm run typecheck` and fix every error.
+Before finishing a task, run `npm run check:fix`, `npm run typecheck` and `npm test`, and fix every error.
 
 ## Folder map
 
@@ -39,6 +40,7 @@ src/main/            Main process (Node.js)
   config/            zod-validated electron-store (`config.get/set/onChange`)
   db/                Drizzle schema and client
   trpc/              tRPC setup (`trpc.ts`), root router (`router.ts`), one file per router in `routers/`
+  test/              Unit test setup (Electron stubs) and helpers (`createTestContext()`)
 src/preload/         Only exposes tRPC. Do not add anything here
 src/shared/          Code imported by both main and renderer: zod schemas, types, translations
 src/renderer/src/    React app
@@ -69,6 +71,9 @@ scripts/             Development scripts (not shipped in the app)
 - Use shadcn/ui components and Tailwind classes; do not write custom CSS unless necessary.
   Colors come from the theme variables (`bg-background`, `text-muted-foreground`…) so dark mode works.
 - Imports: `@renderer/*` (renderer), `@shared/*` (both). The renderer may import **types only** from `@main/*`.
+- Unit tests sit next to the code they test (`todos.ts` -> `todos.test.ts`) and run in Node.js with
+  Vitest. Test tRPC procedures through `router.createCaller(createTestContext())`, which uses a fresh
+  in-memory database. Add or update tests when you change main process logic.
 - Code style is enforced by Biome: single quotes, no semicolons, 2 spaces, 100 columns.
 - Every user-facing change needs a changeset. Create it yourself, without being asked, as part of the
   task: write `.changeset/<name>.md` directly (`npm run changeset` is interactive). See the `release`
@@ -78,4 +83,4 @@ scripts/             Development scripts (not shipped in the app)
 
 Step-by-step guides for common tasks are in `.claude/skills/`:
 `add-trpc-procedure`, `add-db-table`, `add-route`, `add-translation`, `add-ui-component`,
-`add-config-key`, `release`.
+`add-config-key`, `add-unit-test`, `release`.

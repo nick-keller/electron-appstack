@@ -9,8 +9,8 @@ Copilot…) follow the same conventions as you.
 agents. It describes:
 
 - The stack and the role of each folder
-- The commands to run, and that `npm run check:fix` and `npm run typecheck` must
-  pass before a task is done
+- The commands to run, and that `npm run check:fix`, `npm run typecheck` and
+  `npm test` must pass before a task is done
 - The rules of the codebase: no Node.js in the renderer, every IPC call through
   tRPC with zod validation, every string translated, shadcn/ui and theme colors
   for UI, a changeset for user-facing changes
@@ -31,6 +31,7 @@ be pointed to the folder.
 | `add-translation`    | New UI text, or a new language |
 | `add-ui-component`   | New UI: shadcn/ui components, icons, images |
 | `add-config-key`     | A new persisted setting |
+| `add-unit-test`      | Writing or updating unit tests |
 | `release`            | Recording a change in the changelog, publishing a version |
 
 ## Keep them up to date

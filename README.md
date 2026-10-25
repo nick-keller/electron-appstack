@@ -44,6 +44,7 @@ pnpm install
 | `pnpm dev:docs`      | Run the documentation website on localhost:3000 |
 | `pnpm build`         | Build both packages                             |
 | `pnpm typecheck`     | Type check both packages                        |
+| `pnpm test`          | Run the template unit tests                     |
 | `pnpm check`         | Lint and check formatting with Biome            |
 | `pnpm check:fix`     | Fix lint and formatting issues                  |
 | `pnpm lock:template` | Regenerate `template/package-lock.json`         |

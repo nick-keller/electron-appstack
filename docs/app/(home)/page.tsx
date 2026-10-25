@@ -8,6 +8,7 @@ import { Dock } from './dock'
 import styles from './landing.module.css'
 import { Icon, type IconName } from './lucide-icon'
 import { githubUrl, SiteFooter, SiteHeader } from './site'
+import { openGraphImages } from '../metadata'
 
 const createCommand = 'npx degit nick-keller/electron-appstack/template my-app'
 
@@ -36,9 +37,10 @@ export const metadata: Metadata = {
     url: '/',
     siteName: 'Electron AppStack',
     title,
-    description
+    description,
+    images: openGraphImages
   },
-  twitter: { card: 'summary_large_image', title, description }
+  twitter: { card: 'summary_large_image', title, description, images: openGraphImages }
 }
 
 type Tech = {
@@ -233,6 +235,12 @@ const stack: { category: string; techs: Tech[] }[] = [
         description: 'Linting and formatting',
         url: 'https://biomejs.dev',
         logo: '/logos/biome.svg'
+      },
+      {
+        name: 'Vitest',
+        description: 'Unit tests',
+        url: 'https://vitest.dev',
+        logo: '/logos/vitest.svg'
       },
       {
         name: 'Claude Code',

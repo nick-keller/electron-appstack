@@ -7,6 +7,7 @@
     "dev:template": "pnpm --filter electron-app dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter electron-app test",
     "check": "biome check && pnpm --filter electron-app check",
     "check:fix": "biome check --write && pnpm --filter electron-app check:fix",
     "lock:template": "node scripts/update-template-lock.mjs",

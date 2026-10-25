@@ -20,6 +20,7 @@
     "electron.vite.config.ts",
     "drizzle.config.ts",
     "electron-builder.ts",
+    "vitest.config.ts",
     "src/main/**/*",
     "src/preload/**/*",
     "src/shared/**/*"

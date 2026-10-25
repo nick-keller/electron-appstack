@@ -23,6 +23,7 @@ npm run dev
 - Light, dark and system themes, from the menu or the settings page
 - Translations with [i18next](https://www.i18next.com/)
 - [Biome](https://biomejs.dev/) for linting and formatting
+- Unit tests with [Vitest](https://vitest.dev/), run in CI
 - [Changesets](https://github.com/changesets/changesets) for versions and changelog
 - [electron-builder](https://www.electron.build/) with GitHub Actions to build, sign, notarize and publish, and auto update
 - License keys with [licensemanager.dev](https://licensemanager.dev): activation window, offline use, license details in the About window, and updates limited to the versions the license includes. Disabled until you set your product id in `src/main/license/config.ts` (see [Licensing](https://electron-appstack.com/doc/licensing))
@@ -38,6 +39,7 @@ npm run dev
 | `npm run preview`       | Run the production build locally                         |
 | `npm run typecheck`     | Type check the main, preload and renderer code           |
 | `npm run check`         | Lint and check formatting (`check:fix` to fix)           |
+| `npm test`              | Run the unit tests (`test:watch` for watch mode)         |
 | `npm run db:generate`   | Generate a SQL migration from `src/main/db/schema.ts`    |
 | `npm run db:reset`      | Delete the development database (quit the app first)     |
 | `npm run dist`          | Build installers for the current platform into `dist/`   |

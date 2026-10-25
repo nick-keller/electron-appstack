@@ -9,8 +9,9 @@ import * as schema from './schema'
 /** SQLite database file, in the user data folder. */
 export const databasePath = join(app.getPath('userData'), 'app.db')
 
-function openDatabase() {
-  const sqlite = new Database(databasePath)
+/** Opens a SQLite database and applies pending migrations. Tests pass `':memory:'`. */
+export function openDatabase(path: string) {
+  const sqlite = new Database(path)
   sqlite.pragma('journal_mode = WAL')
   sqlite.pragma('foreign_keys = ON')
 
@@ -25,7 +26,7 @@ let db: AppDatabase | undefined
 
 /** Opens the database and applies pending migrations on first call. */
 export function getDb(): AppDatabase {
-  db ??= openDatabase()
+  db ??= openDatabase(databasePath)
   return db
 }
 

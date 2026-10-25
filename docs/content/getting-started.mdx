@@ -97,7 +97,8 @@ start from a clean slate, give this prompt to your coding agent:
 ```md
 Remove the todo example from this app so I can start from a clean slate:
 
-- Delete `src/main/trpc/routers/todos.ts` and remove `todosRouter` from `src/main/trpc/router.ts`.
+- Delete `src/main/trpc/routers/todos.ts` and its test `src/main/trpc/routers/todos.test.ts`, and
+  remove `todosRouter` from `src/main/trpc/router.ts`.
 - In `src/main/db/schema.ts`, delete the `todos` table and the imports it used. Keep the comment.
 - Delete `drizzle/0000_init.sql` and `drizzle/meta/0000_snapshot.json`, and set `entries` to `[]`
   in `drizzle/meta/_journal.json`. My first table will get a fresh migration with `npm run db:generate`.
@@ -106,8 +107,12 @@ Remove the todo example from this app so I can start from a clean slate:
 - In every locale in `src/shared/locales/`, set `home.title` to "Home" (translated) and delete the
   other `home.*` keys.
 - In `AGENTS.md` and `src/renderer/src/lib/trpc.ts`, replace the `trpc.todos.*` examples with a
-  generic `trpc.items.*`.
-- Run `npm run db:reset`, `npm run typecheck` and `npm run check:fix`, and fix any errors.
+  generic `trpc.items.*`. In `AGENTS.md` and `.claude/skills/add-unit-test/SKILL.md`, replace the
+  `todos.ts` / `todosRouter` examples with a generic `items.ts` / `itemsRouter`, and remove the
+  sentence pointing to `todos.test.ts` as an example.
+- Keep `src/main/test/` and `vitest.config.ts`. With no test file left, `npm test` would fail, so
+  add `passWithNoTests: true` to the `test` options in `vitest.config.ts` until I write my first test.
+- Run `npm run db:reset`, `npm run typecheck`, `npm run check:fix` and `npm test`, and fix any errors.
 ```
 
 ## Scripts
@@ -120,6 +125,8 @@ Remove the todo example from this app so I can start from a clean slate:
 | `npm run typecheck`   | Type check the main, preload and renderer code            |
 | `npm run check`       | Lint and check formatting with Biome                      |
 | `npm run check:fix`   | Fix lint and formatting issues                            |
+| `npm test`            | Run the unit tests once                                   |
+| `npm run test:watch`  | Run the unit tests in watch mode                          |
 | `npm run lint`        | Lint only                                                 |
 | `npm run format`      | Format only                                               |
 | `npm run db:generate` | Generate a SQL migration from the database schema         |

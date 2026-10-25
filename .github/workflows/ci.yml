@@ -21,6 +21,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm typecheck
+      - run: pnpm test
       # electron-vite starts Electron to compile bytecode. Ubuntu 24.04 blocks the unprivileged user
       # namespaces Chromium's sandbox needs, so Electron aborts unless they are allowed again.
       # Electron also needs a display, which xvfb-run provides on the headless Linux runner.

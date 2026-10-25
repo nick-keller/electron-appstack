@@ -32,6 +32,7 @@ export const Name = ({ name, note }) => (
         <FileTree.Folder name={<Name name="config" note="zod-validated electron-store" />} />
         <FileTree.Folder name={<Name name="db" note="Drizzle schema and client" />} />
         <FileTree.Folder name={<Name name="license" note="License activation (licensemanager.dev)" />} />
+        <FileTree.Folder name={<Name name="test" note="Unit test setup and helpers" />} />
         <FileTree.Folder name={<Name name="trpc" note="tRPC setup, router and procedures" />} />
       </FileTree.Folder>
       <FileTree.Folder name="preload" defaultOpen>
@@ -65,6 +66,7 @@ export const Name = ({ name, note }) => (
     <FileTree.File name={<Name name="electron.vite.config.ts" note="Build of main, preload and renderer" />} />
     <FileTree.File name={<Name name="tsconfig.node.json" note="Main + preload (Node.js types)" />} />
     <FileTree.File name={<Name name="tsconfig.web.json" note="Renderer (DOM types)" />} />
+    <FileTree.File name={<Name name="vitest.config.ts" note="Unit tests" />} />
   </FileTree.Folder>
 </FileTree>
 

@@ -32,7 +32,7 @@
         "config": "electron-store",
         "packaging": "electron-builder",
         "updates": "electron-updater",
-        "testing": [],
+        "testing": ["Vitest"],
         "linting": ["Biome"],
         "i18n": "i18next"
       },
@@ -54,7 +54,7 @@
         "licensing": "yes",
         "payments": "yes",
         "linting": "yes",
-        "unitTests": "no",
+        "unitTests": "yes",
         "e2eTests": "no",
         "documentation": "yes",
         "aiAgents": "yes",

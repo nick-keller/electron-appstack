@@ -1,0 +1,131 @@
+import { Callout } from 'nextra/components'
+
+# Unit Tests
+
+The template runs unit tests with [Vitest](https://vitest.dev/). Tests run in
+Node.js, without starting Electron, so they take a fraction of a second. They
+are meant for the logic of the main process and of `src/shared/`: tRPC
+procedures, database queries, zod schemas and helpers.
+
+```sh
+npm test             # run every test once (used in CI)
+npm run test:watch   # re-run the affected tests on every change
+```
+
+## Where tests live
+
+A test sits next to the file it tests, with a `.test.ts` extension:
+
+| File | Role |
+| ---- | ---- |
+| `src/main/trpc/routers/todos.test.ts` | Example: tests of the todo procedures |
+| `src/main/test/setup.ts` | Runs before every test file, replaces the Electron APIs |
+| `src/main/test/context.ts` | `createTestContext()`: a tRPC context with an in-memory database |
+| `vitest.config.ts` | Vitest config: which files are tests, aliases, setup file |
+
+Only `src/**/*.test.ts` files are run. Test files are type checked with the rest
+of the main process code by `npm run typecheck`, and never end up in the built
+app.
+
+## Testing tRPC procedures
+
+Every tRPC router can be called directly, without IPC, with
+[`createCaller`](https://trpc.io/docs/server/server-side-calls). Give it
+`createTestContext()`, which opens a fresh SQLite database in memory and applies
+all the migrations from `drizzle/`. Each test starts with an empty database:
+
+```ts filename="src/main/trpc/routers/todos.test.ts"
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createTestContext } from '../../test/context'
+import { todosRouter } from './todos'
+
+describe('todos router', () => {
+  let todos: ReturnType<typeof todosRouter.createCaller>
+
+  beforeEach(() => {
+    todos = todosRouter.createCaller(createTestContext())
+  })
+
+  it('creates a todo with a trimmed title', async () => {
+    const todo = await todos.create({ title: '  Buy milk  ' })
+
+    expect(todo).toMatchObject({ title: 'Buy milk', done: false })
+  })
+
+  it('refuses an empty title', async () => {
+    await expect(todos.create({ title: '   ' })).rejects.toThrow()
+  })
+})
+```
+
+The procedures run with their zod validation and middlewares, against the real
+SQL migrations, so a test also catches a schema change that was not migrated.
+
+To prepare data the procedures cannot create, write to the database directly
+with Drizzle. The context returned by `createTestContext()` holds it in `db`:
+
+```ts
+const ctx = createTestContext()
+ctx.db
+  .insert(todosTable)
+  .values([{ title: 'Old', createdAt: new Date('2026-01-01') }])
+  .run()
+```
+
+## Electron APIs in tests
+
+In Node.js, `import { app } from 'electron'` does not work: the `electron`
+package only exports the path of the Electron binary. `src/main/test/setup.ts`
+mocks the modules the main process uses when it is imported:
+
+- `electron` – a stub with `app.isPackaged`, `app.getAppPath()`, `app.getPath()`
+  and `app.on()`
+- `electron-store` – an in-memory store, so the [app config](/doc/config) works
+  and never writes a file
+
+When the code under test needs another API, or a module should behave
+differently, mock it in the test file with
+[`vi.mock`](https://vitest.dev/api/vi.html#vi-mock). The todo tests replace the
+license module to check that the procedures are refused without an active
+license:
+
+```ts filename="src/main/trpc/routers/todos.test.ts"
+import { vi } from 'vitest'
+import { isLicenseActive } from '../../license'
+
+vi.mock('../../license', () => ({ isLicenseActive: vi.fn(() => true) }))
+
+it('refuses to run while the license is not active', async () => {
+  vi.mocked(isLicenseActive).mockReturnValueOnce(false)
+
+  await expect(todos.list()).rejects.toMatchObject({ code: 'FORBIDDEN' })
+})
+```
+
+`vi.mock` calls are moved above the imports, so the mock is in place before any
+module loads it. Add a stub to `setup.ts` only when many test files need it.
+
+<Callout type="info">
+better-sqlite3 ships prebuilt binaries that work in both Node.js and Electron,
+so the tests use the same SQLite build as the app.
+</Callout>
+
+## Testing the renderer
+
+The setup covers the main process and shared code only. Testing React
+components needs a DOM environment such as
+[jsdom](https://vitest.dev/guide/environment) and
+[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+The simplest way to keep the UI testable is to keep logic out of components: in
+tRPC procedures, or in plain functions in `src/shared/`.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs `npm test` on every pull request and push to
+`main`, after the lint and type checks. A failing test fails the workflow.
+
+## With AI agents
+
+`AGENTS.md` tells agents to run `npm test` before finishing a task, and the
+`add-unit-test` skill in `.claude/skills/` describes how to write tests in this
+project (see [AI Agents](/doc/ai-agents)).
