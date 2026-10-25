@@ -834,6 +834,17 @@ a.tile:hover .go {
   grid-column: span 2;
 }
 
+.page .feature .icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+
+.feature:not([data-accent]) .icon {
+  background: var(--line);
+  color: var(--fg);
+}
+
 .page .feature h3 {
   font-size: 1.15rem;
   font-weight: 800;

@@ -300,6 +300,106 @@ const icons = {
       <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
     </>
   ),
+  atom: (
+    <>
+      <circle cx="12" cy="12" r="1" />
+      <path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z" />
+      <path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z" />
+    </>
+  ),
+  palette: (
+    <>
+      <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+    </>
+  ),
+  database: (
+    <>
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+      <path d="M3 12A9 3 0 0 0 21 12" />
+    </>
+  ),
+  settings: (
+    <>
+      <path d="M14 17H5" />
+      <path d="M19 7h-9" />
+      <circle cx="17" cy="17" r="3" />
+      <circle cx="7" cy="7" r="3" />
+    </>
+  ),
+  exchange: (
+    <>
+      <path d="M8 3 4 7l4 4" />
+      <path d="M4 7h16" />
+      <path d="m16 21 4-4-4-4" />
+      <path d="M20 17H4" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+      <path d="M8 16H3v5" />
+    </>
+  ),
+  rocket: (
+    <>
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </>
+  ),
+  key: (
+    <>
+      <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" />
+      <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
+    </>
+  ),
+  moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+  languages: (
+    <>
+      <path d="m5 8 6 6" />
+      <path d="m4 14 6-6 2-3" />
+      <path d="M2 5h12" />
+      <path d="M7 2h1" />
+      <path d="m22 22-5-10-5 10" />
+      <path d="M14 18h6" />
+    </>
+  ),
+  image: (
+    <>
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </>
+  ),
+  sparkles: (
+    <>
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+      <path d="M20 3v4" />
+      <path d="M22 5h-4" />
+      <path d="M4 17v2" />
+      <path d="M5 18H3" />
+    </>
+  ),
+  shieldCheck: (
+    <>
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
   arrow: (
     <>
       <path d="M7 7h10v10" />
@@ -399,92 +499,113 @@ const pillars: {
 ]
 
 // Features with an accent take a double-width colored tile in the bento grid
-const features: { title: string; description: string; href: string; accent?: Accent }[] = [
+const features: {
+  title: string
+  description: string
+  href: string
+  icon: IconName
+  accent?: Accent
+}[] = [
   {
     title: 'Hot reload',
     description:
       'electron-vite reloads the renderer instantly and restarts the main process on change.',
     href: '/doc/development',
+    icon: 'zap',
     accent: 'orange'
   },
   {
     title: 'Modern React stack',
     description:
       'React 19 with type-safe file-based routing from TanStack Router and TanStack Query.',
-    href: '/doc/ui'
+    href: '/doc/ui',
+    icon: 'atom'
   },
   {
     title: 'Design system',
     description:
       'shadcn/ui components and Tailwind CSS v4, with system, light and dark themes built in.',
-    href: '/doc/ui'
+    href: '/doc/ui',
+    icon: 'palette'
   },
   {
     title: 'Local database',
     description: 'SQLite with Drizzle ORM, migrations applied automatically on startup.',
-    href: '/doc/database'
+    href: '/doc/database',
+    icon: 'database'
   },
   {
     title: 'Typed app config',
     description: 'electron-store validated by a zod schema, read and written from anywhere.',
-    href: '/doc/config'
+    href: '/doc/config',
+    icon: 'settings'
   },
   {
     title: 'Typed IPC',
     description: 'tRPC and zod over IPC: fully typed, validated calls to the main process.',
     href: '/doc/ipc',
+    icon: 'exchange',
     accent: 'violet'
   },
   {
     title: 'Auto update',
     description: 'electron-updater checks GitHub Releases and installs new versions.',
-    href: '/doc/auto-update'
+    href: '/doc/auto-update',
+    icon: 'refresh'
   },
   {
     title: 'Signed releases',
     description:
       'Changesets and GitHub Actions to build, sign, notarize and publish for every platform.',
     href: '/doc/releasing',
+    icon: 'rocket',
     accent: 'cyan'
   },
   {
     title: 'Source code protection',
     description:
       'Main process shipped as V8 bytecode, locked down with Electron fuses and ASAR integrity.',
-    href: '/doc/source-protection'
+    href: '/doc/source-protection',
+    icon: 'lock'
   },
   {
     title: 'Licensing',
     description:
       'License keys with licensemanager.dev: activation window, offline use and gated updates.',
     href: '/doc/licensing',
+    icon: 'key',
     accent: 'pink'
   },
   {
     title: 'Dark mode',
     description: 'System, light or dark theme, from the native menu or the settings.',
-    href: '/doc/theming'
+    href: '/doc/theming',
+    icon: 'moon'
   },
   {
     title: 'Translations',
     description: 'i18next with typed keys, shared by the renderer and the native menu.',
-    href: '/doc/i18n'
+    href: '/doc/i18n',
+    icon: 'languages'
   },
   {
     title: 'Icons and images',
     description: 'Conventions for the app icon, DMG background and renderer images.',
-    href: '/doc/assets'
+    href: '/doc/assets',
+    icon: 'image'
   },
   {
     title: 'Ready for AI agents',
     description: 'AGENTS.md and skills so Claude Code and other agents follow the conventions.',
     href: '/doc/ai-agents',
+    icon: 'sparkles',
     accent: 'lime'
   },
   {
     title: 'Secure defaults',
     description: 'Sandboxed renderer, context isolation and a strict Content Security Policy.',
-    href: '/doc/project-structure'
+    href: '/doc/project-structure',
+    icon: 'shieldCheck'
   }
 ]
 
@@ -852,10 +973,6 @@ export default function HomePage() {
       <main>
         {/* Hero */}
         <section className={styles.hero}>
-          <p className={styles.badge}>
-            <span className={styles.dot} aria-hidden />
-            100% free · macOS, Windows and Linux
-          </p>
           <h1 className={styles.title}>
             Production-ready <span className={styles.highlight}>Electron</span> boilerplate
           </h1>
@@ -1012,6 +1129,9 @@ export default function HomePage() {
                 className={`${styles.tile} ${styles.feature}`}
                 data-accent={feature.accent}
               >
+                <span className={styles.icon} data-accent={feature.accent}>
+                  <Icon name={feature.icon} />
+                </span>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </Link>
