@@ -14,3 +14,5 @@ docs/next-env.d.ts
 # template
 template/out
 template/dist
+
+launch-kit

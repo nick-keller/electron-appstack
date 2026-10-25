@@ -2,6 +2,7 @@ import { Banner, Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import { Footer, Layout, Navbar } from 'nextra-theme-docs'
 import type { ReactNode } from 'react'
+import { Analytics } from '../analytics'
 import 'nextra-theme-docs/style.css'
 import '../globals.css'
 import './code.css'
@@ -61,6 +62,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
         >
           {children}
         </Layout>
+        <Analytics />
       </body>
     </html>
   )
