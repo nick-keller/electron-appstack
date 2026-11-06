@@ -14,7 +14,7 @@ const createCommand = 'npx degit nick-keller/electron-appstack/template my-app'
 
 const title = 'Electron Boilerplate – Production-ready, Fullstack and Free'
 const description =
-  'Free, production-ready fullstack Electron boilerplate with React, TypeScript, tRPC, SQLite, auto update, signed releases, V8 bytecode protection and license keys with Stripe. Create and sell your desktop app in days, not months.'
+  'Free, production-ready Electron boilerplate: React, TypeScript, tRPC, SQLite, auto update, code signing and Stripe license keys. Ship your desktop app in days.'
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -724,7 +724,7 @@ function CreateCommand() {
       <code>
         <span className={styles.prompt}>$</span> {createCommand}
       </code>
-      <CopyButton text={createCommand} className={styles.copy} />
+      <CopyButton text={createCommand} event="copy_create_command" className={styles.copy} />
     </div>
   )
 }

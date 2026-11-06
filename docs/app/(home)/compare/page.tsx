@@ -36,17 +36,16 @@ import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
 
 const title = 'How does Electron AppStack compare to other boilerplates?'
-const description = `Electron AppStack compared to ${others.length} Electron boilerplates, including ${others
+const description = `Electron AppStack compared side by side to ${others.length} Electron boilerplates, including ${others
   .slice()
   .sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0))
-  .slice(0, 3)
+  .slice(0, 2)
   .map((b) => b.name)
-  .join(
-    ', '
-  )}: ${featureDefinitions.length} features, tech stack, Electron version and maintenance, side by side.`
+  .join(' and ')}, on ${featureDefinitions.length} features.`
 
 export const metadata: Metadata = {
-  title: { absolute: `${title} – Electron AppStack` },
+  // Shorter than the H1 so it is not cut in search results
+  title: { absolute: `Electron AppStack vs ${others.length} other Electron boilerplates` },
   description,
   alternates: { canonical: '/compare' },
   openGraph: {
