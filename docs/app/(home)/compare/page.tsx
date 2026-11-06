@@ -21,6 +21,7 @@ import {
   updatedAt
 } from '../../../lib/boilerplates'
 import { openGraphImages } from '../../metadata'
+import { author, organization } from '../../structured-data'
 import {
   BoilerplateLinks,
   BoilerplatePage,
@@ -106,7 +107,8 @@ const jsonLd = {
   headline: title,
   description,
   dateModified: updatedAt,
-  author: { '@type': 'Organization', name: 'Electron AppStack' },
+  author: { '@type': 'Person', name: author.name, url: author.url },
+  publisher: { '@type': 'Organization', name: organization.name, url: organization.url },
   about: [self, ...others].map((b) => ({
     '@type': 'SoftwareSourceCode',
     name: b.name,

@@ -173,3 +173,9 @@ Emit from anywhere in the main process: `appEvents.emit('navigate', '/settings')
   subscription, wrap it with `ipcIterable()` from `src/main/trpc/trpc.ts`:
   `publicProcedure.subscription(({ signal }) => ipcIterable(myGenerator(signal)))`.
 </Callout>
+
+## Related guides
+
+- [SQLite in Electron with Drizzle ORM](/doc/database) – schema, migrations and queries
+- [Typed settings with electron-store](/doc/config) – preferences and window state
+- [Unit testing Electron with Vitest](/doc/testing) – test the main process without launching Electron

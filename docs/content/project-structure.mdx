@@ -100,3 +100,9 @@ Code needed by both sides (zod schemas, types, translations) lives in
 The renderer imports the type of the tRPC router from `@main/trpc/router`, which
 is why `tsconfig.web.json` also includes `src/main`. Importing a value from
 `@main` in the renderer would fail at runtime.
+
+## Related guides
+
+- [Type-safe Electron IPC with tRPC](/doc/ipc) – call the main process from React
+- [React, TanStack Router, shadcn/ui and Tailwind in Electron](/doc/ui) – routing and components
+- [Hot reload, type checking and linting](/doc/development) – the development workflow

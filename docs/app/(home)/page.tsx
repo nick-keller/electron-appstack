@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import { openGraphImages } from '../metadata'
+import { author, JsonLd, organization, siteUrl, website } from '../structured-data'
 import { CodeBlock } from './code-block'
 import { CopyButton } from './copy-button'
 import { Dock } from './dock'
@@ -664,13 +665,25 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
 const jsonLd = [
   {
     '@context': 'https://schema.org',
-    '@type': 'SoftwareSourceCode',
-    name: 'Electron AppStack',
-    description,
-    codeRepository: githubUrl,
-    programmingLanguage: 'TypeScript',
-    runtimePlatform: 'Electron',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+    '@graph': [
+      website,
+      organization,
+      author,
+      {
+        '@type': 'SoftwareSourceCode',
+        name: 'Electron AppStack',
+        description,
+        url: siteUrl,
+        image: `${siteUrl}/opengraph-image.png`,
+        codeRepository: githubUrl,
+        programmingLanguage: 'TypeScript',
+        runtimePlatform: 'Electron',
+        license: `${siteUrl}/doc/license`,
+        author: { '@id': author['@id'] },
+        publisher: { '@id': organization['@id'] },
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+      }
+    ]
   },
   {
     '@context': 'https://schema.org',
@@ -782,11 +795,7 @@ function AppMock() {
 export default function HomePage() {
   return (
     <div className={styles.page}>
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: static JSON-LD
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
 
       <SiteHeader />
 

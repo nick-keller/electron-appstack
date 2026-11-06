@@ -19,5 +19,11 @@ export default {
   'source-protection': 'Source Code Protection',
   '-- More': { type: 'separator', title: 'More' },
   'ai-agents': 'AI Agents',
-  license: 'License'
+  license: 'License',
+  // Links to the landing pages, so every docs page links to them
+  compare: { title: 'Compare Boilerplates', href: '/compare' },
+  'best-electron-boilerplate': {
+    title: 'Best Electron Boilerplates',
+    href: '/best-electron-boilerplate'
+  }
 }
