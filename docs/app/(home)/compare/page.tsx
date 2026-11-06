@@ -20,6 +20,7 @@ import {
   supportedBy,
   updatedAt
 } from '../../../lib/boilerplates'
+import { openGraphImages } from '../../metadata'
 import {
   BoilerplateLinks,
   BoilerplatePage,
@@ -33,7 +34,6 @@ import {
 import styles from '../boilerplates.module.css'
 import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
-import { openGraphImages } from '../../metadata'
 
 const title = 'How does Electron AppStack compare to other boilerplates?'
 const description = `Electron AppStack compared to ${others.length} Electron boilerplates, including ${others

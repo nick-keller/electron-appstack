@@ -21,6 +21,7 @@ import {
   updatedAt,
   updatedYear
 } from '../../../lib/boilerplates'
+import { openGraphImages } from '../../metadata'
 import {
   BoilerplateLinks,
   BoilerplatePage,
@@ -32,7 +33,6 @@ import {
 import styles from '../boilerplates.module.css'
 import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
-import { openGraphImages } from '../../metadata'
 
 const current = ranking.filter((b) => !isOutdated(b))
 const outdated = ranking.filter(isOutdated)
