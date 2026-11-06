@@ -18,3 +18,6 @@ template/dist
 launch-kit
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Private SEO notes, never committed
+.seo/
