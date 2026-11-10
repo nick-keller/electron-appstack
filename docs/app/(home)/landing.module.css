@@ -243,12 +243,12 @@ a.tile:not([data-accent]):hover {
 }
 
 .page .tagline .days {
-  color: var(--yellow);
+  color: var(--lime);
 }
 
 .page .tagline .notMonths {
   text-decoration: line-through;
-  text-decoration-color: var(--yellow);
+  text-decoration-color: var(--lime);
   text-decoration-thickness: 0.1em;
 }
 
@@ -371,6 +371,19 @@ a.tile:not([data-accent]):hover {
   line-height: 1;
   font-weight: 800;
   letter-spacing: -0.05em;
+}
+
+.secured {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+}
+
+.secured svg {
+  width: 0.85em;
+  height: 0.85em;
+  flex-shrink: 0;
 }
 
 .osLogos {
@@ -722,8 +735,103 @@ a.tile:hover .go {
 .sell h2,
 .secure h2,
 .typed h2,
-.dx h2 {
+.dx h2,
+.maker h2 {
   font-size: clamp(1.9rem, 3.5vw, 2.75rem);
+}
+
+/* Maker */
+
+/* Only top padding: the pillars section below already adds its own */
+.makerSection {
+  padding-top: 128px;
+}
+
+.maker {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: 56px;
+  padding: 56px;
+}
+
+.quote {
+  margin: 32px 0 0;
+  padding-left: 20px;
+  border-left: 3px solid var(--orange);
+}
+
+.page .quote p {
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.avatar {
+  flex: none;
+  border-radius: 999px;
+}
+
+.author span {
+  display: flex;
+  flex-direction: column;
+}
+
+.author small {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.page .author small a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.makerShot {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-inner);
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.makerShot:hover {
+  transform: translateY(-4px);
+}
+
+.makerShot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Comparison teaser */
+
+.compareLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 40px;
+}
+
+/* Community */
+
+.community {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.page .community .feature {
+  justify-content: flex-start;
+  min-height: 0;
 }
 
 .steps {
@@ -1134,17 +1242,27 @@ a.tile:hover .go {
 
   .sell,
   .dx,
-  .faq {
+  .faq,
+  .maker {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .sell,
-  .dx {
+  .dx,
+  .maker {
     gap: 40px;
+  }
+
+  .community {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .section {
     padding: 96px 0;
+  }
+
+  .makerSection {
+    padding-top: 96px;
   }
 }
 
@@ -1169,8 +1287,13 @@ a.tile:hover .go {
   .sell,
   .secure,
   .typed,
-  .dx {
+  .dx,
+  .maker {
     padding: 28px;
+  }
+
+  .community {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .go {
@@ -1210,6 +1333,10 @@ a.tile:hover .go {
 
   .section {
     padding: 80px 0;
+  }
+
+  .makerSection {
+    padding-top: 80px;
   }
 
   .cta {

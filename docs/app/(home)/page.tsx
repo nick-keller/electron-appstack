@@ -1,9 +1,20 @@
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
+import {
+  type Boilerplate,
+  boilerplates,
+  type FeatureKey,
+  others,
+  self,
+  updatedYear
+} from '../../lib/boilerplates'
 import { openGraphImages } from '../metadata'
 import { author, JsonLd, organization, siteUrl, website } from '../structured-data'
+import { FeatureMatrix, SupportLegend } from './boilerplate-ui'
 import { CodeBlock } from './code-block'
 import { CopyButton } from './copy-button'
 import { Dock } from './dock'
@@ -274,15 +285,20 @@ const allTechs = stack.flatMap((group) => group.techs)
 
 type Accent = 'lime' | 'pink' | 'violet' | 'cyan' | 'orange'
 
-// Wide pillars fill their tile with the accent color and show a big figure, the others show the
-// accent on their icon
+// Every docs page except the introduction and the license text, counted at build time
+const guideCount = readdirSync(join(process.cwd(), 'content')).filter(
+  (file) => file.endsWith('.mdx') && !['index.mdx', 'license.mdx'].includes(file)
+).length
+
+// Selling, security and typing have their own highlight tiles below, so the pillars only carry
+// what is not shown anywhere else
 const pillars: {
   title: string
   description: string
   href: string
   icon: IconName
   accent: Accent
-  figure?: string
+  figure: string
 }[] = [
   {
     title: '100% free',
@@ -294,49 +310,37 @@ const pillars: {
     figure: '$0'
   },
   {
-    title: 'Ready to sell',
-    description:
-      'License keys with licensemanager.dev and payments with Stripe: activation window, offline use and updates gated by license.',
-    href: '/doc/licensing',
-    icon: 'dollar',
-    accent: 'pink'
-  },
-  {
-    title: 'Secure',
-    description:
-      'Main process shipped as V8 bytecode, Electron fuses, ASAR integrity, sandboxed renderer and a strict Content Security Policy.',
-    href: '/doc/source-protection',
-    icon: 'shield',
-    accent: 'cyan'
-  },
-  {
-    title: 'Fully typed',
-    description:
-      'TypeScript from the database to the UI: Drizzle schema, tRPC procedures, zod inputs, routes, config and translation keys.',
-    href: '/doc/ipc',
-    icon: 'braces',
-    accent: 'violet'
-  },
-  {
-    title: 'Great DX',
-    description:
-      'Instant hot reload, one command to start, Biome for linting and formatting, and AGENTS.md so AI agents follow the conventions.',
-    href: '/doc/development',
-    icon: 'zap',
-    accent: 'orange'
-  },
-  {
     title: 'Great documentation',
     description:
       'A guide for every feature, from the first run to signing, notarizing and selling your app, written for this exact template.',
     href: '/doc',
     icon: 'book',
     accent: 'violet',
-    figure: '16 guides'
+    figure: `${guideCount} guides`
   }
 ]
 
-// Features with an accent take a double-width colored tile in the bento grid
+// Boilerplates shown in the comparison teaser, next to Electron AppStack: the most popular ones
+const comparedIds = ['electron-react-boilerplate', 'electron-vite', 'electron-forge']
+const comparedColumns = [
+  self,
+  ...comparedIds.flatMap((id) => boilerplates.filter((b) => b.id === id))
+] as Boilerplate[]
+const comparedFeatures: FeatureKey[] = [
+  'aiAgents',
+  'uiComponents',
+  'i18n',
+  'typedIpc',
+  'database',
+  'autoUpdate',
+  'ciRelease',
+  'codeSigning',
+  'sourceProtection',
+  'licensing'
+]
+
+// Features with an accent take a double-width colored tile in the bento grid. Typed IPC, source
+// protection, licensing and secure defaults are left out: the highlight tiles cover them
 const features: {
   title: string
   description: string
@@ -367,22 +371,17 @@ const features: {
     icon: 'palette'
   },
   {
-    title: 'Local database',
-    description: 'SQLite with Drizzle ORM, migrations applied automatically on startup.',
-    href: '/doc/database',
-    icon: 'database'
-  },
-  {
     title: 'Typed app config',
     description: 'electron-store validated by a zod schema, read and written from anywhere.',
     href: '/doc/config',
     icon: 'settings'
   },
   {
-    title: 'Typed IPC',
-    description: 'tRPC and zod over IPC: fully typed, validated calls to the main process.',
-    href: '/doc/ipc',
-    icon: 'exchange',
+    title: 'Local database',
+    description:
+      'SQLite with Drizzle ORM: typed queries, generated migrations applied automatically on startup.',
+    href: '/doc/database',
+    icon: 'database',
     accent: 'violet'
   },
   {
@@ -390,29 +389,6 @@ const features: {
     description: 'electron-updater checks GitHub Releases and installs new versions.',
     href: '/doc/auto-update',
     icon: 'refresh'
-  },
-  {
-    title: 'Signed releases',
-    description:
-      'Changesets and GitHub Actions to build, sign, notarize and publish for every platform.',
-    href: '/doc/releasing',
-    icon: 'rocket',
-    accent: 'cyan'
-  },
-  {
-    title: 'Source code protection',
-    description:
-      'Main process shipped as V8 bytecode, locked down with Electron fuses and ASAR integrity.',
-    href: '/doc/source-protection',
-    icon: 'lock'
-  },
-  {
-    title: 'Licensing',
-    description:
-      'License keys with licensemanager.dev: activation window, offline use and gated updates.',
-    href: '/doc/licensing',
-    icon: 'key',
-    accent: 'pink'
   },
   {
     title: 'Dark mode',
@@ -427,6 +403,14 @@ const features: {
     icon: 'languages'
   },
   {
+    title: 'Signed releases',
+    description:
+        'Changesets and GitHub Actions to build, sign, notarize and publish for every platform.',
+    href: '/doc/releasing',
+    icon: 'rocket',
+    accent: 'cyan'
+  },
+  {
     title: 'Icons and images',
     description: 'Conventions for the app icon, DMG background and renderer images.',
     href: '/doc/assets',
@@ -434,16 +418,51 @@ const features: {
   },
   {
     title: 'Ready for AI agents',
-    description: 'AGENTS.md and skills so Claude Code and other agents follow the conventions.',
+    description:
+      'AGENTS.md, CLAUDE.md and skills so Claude Code, Cursor, Codex and Copilot follow the conventions.',
     href: '/doc/ai-agents',
     icon: 'sparkles',
     accent: 'lime'
   },
   {
-    title: 'Secure defaults',
-    description: 'Sandboxed renderer, context isolation and a strict Content Security Policy.',
-    href: '/doc/project-structure',
-    icon: 'shieldCheck'
+    title: 'Unit tests',
+    description: 'Vitest tests for the main process, on an in-memory database, without Electron.',
+    href: '/doc/testing',
+    icon: 'flask'
+  }
+]
+
+// Community links, kept out of the FAQ (and its JSON-LD) so the FAQ only answers product questions
+const community: { title: string; description: string; href: string }[] = [
+  {
+    title: 'Report an issue',
+    description:
+      'Open an issue with the steps to reproduce it, your platform and what you expected.',
+    href: `${githubUrl}/issues/new?template=bug_report.yml`
+  },
+  {
+    title: 'Suggest an improvement',
+    description:
+      'Feature ideas, better defaults and missing documentation are all welcome. Describe the problem it solves.',
+    href: `${githubUrl}/issues/new?template=feature_request.yml`
+  },
+  {
+    title: 'Contribute',
+    description:
+      'Pull requests are welcome, from typo fixes to new features. For a big change, open an issue first.',
+    href: `${githubUrl}/pulls`
+  },
+  {
+    title: 'Showcase your app',
+    description:
+      'Built an app with it? Share its name, link and a screenshot, mention Electron AppStack on social media and get a dofollow backlink.',
+    href: `${githubUrl}/issues/new?template=showcase.yml`
+  },
+  {
+    title: 'Spread the word',
+    description:
+      'Star the repository and share Electron AppStack on social media, mentioning @NicolasKa3 on X.',
+    href: 'https://x.com/NicolasKa3'
   }
 ]
 
@@ -529,7 +548,7 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
   {
     question: 'Can I sell the app I build with it?',
     answer:
-      'Yes, that is what it is made for. Licensing with LicenseManager and Stripe is built in, and your main process ships as V8 bytecode so your code is not readable in the packaged app. Licensing stays disabled until you configure it, so free apps work too.'
+      'Yes, that is what it is made for. Licensing with LicenseManager and Stripe is built in, and your main process ships as V8 bytecode, which makes your code much harder to read and modify in the packaged app. Licensing stays disabled until you configure it, so free apps work too.'
   },
   {
     question: 'How do I sell an Electron app?',
@@ -584,7 +603,7 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
   {
     question: 'Does it work with AI coding agents?',
     answer:
-      'Yes. The template ships an AGENTS.md and skills, so Claude Code and other agents follow the project conventions when they add routes, procedures or tables.'
+      'Yes. The template ships an AGENTS.md, a CLAUDE.md and skills, so Claude Code, Cursor, Codex and GitHub Copilot follow the project conventions when they add routes, procedures or tables, and run the lint, type check and tests before they finish.'
   },
   {
     question: 'Why is it free?',
@@ -597,66 +616,6 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
         on every platform, source code protection, license keys. None of it had anything to do with
         the app itself. Once it all worked, I turned it into this template and gave it away, so
         other developers can skip that part and spend their time on their own app.
-      </>
-    )
-  },
-  {
-    question: 'How can I report an issue?',
-    answer:
-      'Open an issue on GitHub with the steps to reproduce it, your platform and what you expected to happen.',
-    content: (
-      <>
-        Open an <a href={`${githubUrl}/issues/new?template=bug_report.yml`}>issue on GitHub</a> with
-        the steps to reproduce it, your platform and what you expected to happen.
-      </>
-    )
-  },
-  {
-    question: 'How can I suggest an improvement?',
-    answer:
-      'Open an issue on GitHub describing your idea and the problem it solves. Feature ideas, better defaults and missing documentation are all welcome.',
-    content: (
-      <>
-        Open an <a href={`${githubUrl}/issues/new?template=feature_request.yml`}>issue on GitHub</a>{' '}
-        describing your idea and the problem it solves. Feature ideas, better defaults and missing
-        documentation are all welcome.
-      </>
-    )
-  },
-  {
-    question: 'How can I contribute?',
-    answer:
-      'Pull requests are welcome on GitHub, from typo fixes to new features. For a big change, open an issue first so we can agree on the approach before you write the code.',
-    content: (
-      <>
-        <a href={`${githubUrl}/pulls`}>Pull requests</a> are welcome, from typo fixes to new
-        features. For a big change, open an issue first so we can agree on the approach before you
-        write the code.
-      </>
-    )
-  },
-  {
-    question: 'How can I say thank you and help the project?',
-    answer:
-      'Spread the word: star the repository on GitHub and share Electron AppStack on social media, mentioning @NicolasKa3 on X. It helps more developers find it, and it makes my day.',
-    content: (
-      <>
-        Spread the word: star the <a href={githubUrl}>repository on GitHub</a> and share Electron
-        AppStack on social media, mentioning <a href={twitterUrl}>@NicolasKa3</a> on X. It helps
-        more developers find it, and it makes my day.
-      </>
-    )
-  },
-  {
-    question: 'I built an app with Electron AppStack, can I showcase it here?',
-    answer:
-      'Of course! Open an issue on GitHub with your app name, a link and a screenshot. Mention Electron AppStack on social media and your showcase gets a dofollow backlink to your website.',
-    content: (
-      <>
-        Of course! Open an{' '}
-        <a href={`${githubUrl}/issues/new?template=showcase.yml`}>issue on GitHub</a> with your app
-        name, a link and a screenshot. Mention Electron AppStack on social media and your showcase
-        gets a dofollow backlink to your website.
       </>
     )
   }
@@ -822,8 +781,11 @@ export default function HomePage() {
             <AppMock />
           </div>
           <div className={`${styles.tile} ${styles.heroSide}`} data-accent="cyan">
-            <span className={styles.figure}>V8</span>
-            <p>Main process shipped as bytecode, so your code stays unreadable.</p>
+            <span className={`${styles.figure} ${styles.secured}`}>
+              <Icon name="lock" />
+              Secured
+            </span>
+            <p>Bytecode, Electron fuses and ASAR integrity guard your code, on by default.</p>
           </div>
           <div className={`${styles.tile} ${styles.heroSide}`} data-accent="pink">
             <span className={styles.osLogos} role="img" aria-label="macOS, Windows and Linux">
@@ -842,12 +804,61 @@ export default function HomePage() {
           />
         </div>
 
+        {/* Maker: the template comes from a shipped commercial app */}
+        <section className={styles.makerSection} aria-labelledby="maker">
+          <article className={`${styles.tile} ${styles.maker}`}>
+            <div>
+              <p className={styles.eyebrow} data-accent="orange">
+                Battle-tested
+              </p>
+              <h2 id="maker">Extracted from RabbitGUI, a commercial Electron app</h2>
+              <p className={styles.lead}>
+                <a href="https://rabbitgui.com">RabbitGUI</a> is a RabbitMQ client for macOS,
+                Windows and Linux, sold with license keys. Electron AppStack is its foundation: the
+                same typed IPC, database, updater, release pipeline and licensing that ship in
+                RabbitGUI today.
+              </p>
+              <blockquote className={styles.quote}>
+                <p>
+                  “Setting all of this up took me months, and none of it had anything to do with the
+                  app itself. I turned it into a template so you can skip that part and spend your
+                  time on your own app.”
+                </p>
+                <footer className={styles.author}>
+                  <Image
+                    src="/images/nicolas-keller.jpg"
+                    alt="Nicolas Keller"
+                    width={56}
+                    height={56}
+                    className={styles.avatar}
+                  />
+                  <span>
+                    <strong>Nicolas Keller</strong>
+                    <small>
+                      Maker of RabbitGUI and Electron AppStack ·{' '}
+                      <a href={twitterUrl}>@NicolasKa3</a>
+                    </small>
+                  </span>
+                </footer>
+              </blockquote>
+            </div>
+            <a href="https://rabbitgui.com" className={styles.makerShot} style={{ borderRadius: 6}}>
+              <Image
+                src="/images/rabbitgui-electron-app.webp"
+                alt="RabbitGUI, the Electron app Electron AppStack was extracted from, showing the messages of a dead letter queue"
+                width={1352}
+                height={720}
+              />
+            </a>
+          </article>
+        </section>
+
         {/* Value pillars */}
         <section className={styles.section} aria-labelledby="why">
           <SectionHead
             id="why"
-            eyebrow="Why Electron AppStack"
-            title="Skip months of setup. Ship the app."
+            eyebrow="Skip months of setup"
+            title="A free Electron boilerplate, documented end to end"
           >
             Every desktop app needs the same foundation before the first feature. It is already
             built, tested and documented here.
@@ -858,13 +869,13 @@ export default function HomePage() {
                 key={pillar.title}
                 href={pillar.href}
                 className={`${styles.tile} ${styles.pillar}`}
-                data-accent={pillar.figure ? pillar.accent : undefined}
-                data-wide={pillar.figure ? true : undefined}
+                data-accent={pillar.accent}
+                data-wide
               >
                 <span className={styles.icon} data-accent={pillar.accent}>
                   <Icon name={pillar.icon} />
                 </span>
-                {pillar.figure && <span className={styles.figure}>{pillar.figure}</span>}
+                <span className={styles.figure}>{pillar.figure}</span>
                 <h3>{pillar.title}</h3>
                 <p>{pillar.description}</p>
                 <span className={styles.go} aria-hidden>
@@ -882,7 +893,7 @@ export default function HomePage() {
               <p className={styles.eyebrow} data-accent="lime">
                 Ready to sell
               </p>
-              <h2 id="sell">Get paid for your desktop app from day one</h2>
+              <h2 id="sell">Sell your Electron app with Stripe and license keys</h2>
               <p className={styles.lead}>
                 Licensing is wired into the app, the updater and the IPC layer. Connect{' '}
                 <a href="https://licensemanager.dev">licensemanager.dev</a> to Stripe and start
@@ -906,11 +917,12 @@ export default function HomePage() {
             <p className={styles.eyebrow} data-accent="cyan">
               Secure
             </p>
-            <h2 id="secure">Your code stays yours</h2>
+            <h2 id="secure">Protect your Electron app source code</h2>
             <p className={styles.lead}>
               Production builds compile the main process to V8 bytecode, so your business logic is
-              not readable in the app archive. Electron fuses and ASAR integrity make the app refuse
-              to run modified code. All on by default, nothing to configure.
+              not shipped as readable JavaScript and is much harder to reverse engineer. Electron
+              fuses and ASAR integrity make the app refuse to run modified code. All on by default,
+              nothing to configure.
             </p>
             <ul className={styles.checks}>
               {protections.map((item) => (
@@ -929,7 +941,7 @@ export default function HomePage() {
             <p className={styles.eyebrow} data-accent="violet">
               Fully typed
             </p>
-            <h2 id="typed">One type system, from the database to the UI</h2>
+            <h2 id="typed">Type-safe Electron IPC with tRPC, from database to UI</h2>
             <p className={styles.lead}>
               Define a table with Drizzle, expose it with a tRPC procedure, call it from React:
               inputs are validated with zod and every call is autocompleted.
@@ -946,7 +958,7 @@ export default function HomePage() {
           <SectionHead
             id="features-title"
             eyebrow="Features"
-            title="Everything a production desktop app needs"
+            title="Every feature a production Electron app needs"
           >
             Each feature is set up, working together, and documented.
           </SectionHead>
@@ -968,12 +980,34 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Comparison teaser, the full tables are on /compare */}
+        <section id="compare" className={styles.section} aria-labelledby="compare-title">
+          <SectionHead
+            id="compare-title"
+            eyebrow="Compare"
+            title="Electron AppStack vs other Electron boilerplates"
+          >
+            Most Electron templates give you a window and a build. Here is what the most popular
+            ones include, out of the box.
+          </SectionHead>
+          <FeatureMatrix columns={comparedColumns} features={comparedFeatures} />
+          <SupportLegend />
+          <div className={styles.compareLinks}>
+            <Link href="/compare" className={styles.link}>
+              Compare with {others.length} Electron boilerplates <Icon name="arrow" size={18} />
+            </Link>
+            <Link href="/best-electron-boilerplate" className={styles.link} data-accent="pink">
+              Best Electron boilerplates in {updatedYear} <Icon name="arrow" size={18} />
+            </Link>
+          </div>
+        </section>
+
         {/* Tech stack */}
         <section id="stack" className={styles.section} aria-labelledby="stack-title">
           <SectionHead
             id="stack-title"
             eyebrow="Modern stack"
-            title="Built with the tools you already love"
+            title="The Electron, React and TypeScript stack"
           >
             Electron, React, TypeScript and Vite at the core, with the best libraries of the
             ecosystem around them, on their latest versions.
@@ -1009,7 +1043,7 @@ export default function HomePage() {
             <p className={styles.eyebrow} data-accent="orange">
               Great DX and documentation
             </p>
-            <h2 id="docs">From npm run dev to your first sale</h2>
+            <h2 id="docs">Create an Electron app in one command</h2>
             <p className={styles.lead}>
               One command starts the app with hot reload. The documentation then walks you through
               every step: building screens, storing data, translating, releasing, signing,
@@ -1039,13 +1073,26 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Community */}
+        <section id="community" className={styles.section} aria-labelledby="community-title">
+          <SectionHead id="community-title" eyebrow="Community" title="Help make it better" />
+          <div className={styles.community}>
+            {community.map((item) => (
+              <a key={item.title} href={item.href} className={`${styles.tile} ${styles.feature}`}>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section
           className={`${styles.tile} ${styles.cta}`}
           data-accent="lime"
           aria-labelledby="cta"
         >
-          <h2 id="cta">Start building your desktop app today</h2>
+          <h2 id="cta">Start building your Electron app today</h2>
           <p>Free, production-ready, and yours from the first command.</p>
           <GetStartedActions />
           <CreateCommand />
