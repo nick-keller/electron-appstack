@@ -7,17 +7,26 @@ description: "Add dark mode to an Electron app: follow the OS theme with nativeT
 
 The app supports three themes: **System** (follows the OS), **Light** and
 **Dark**. The user picks one in **View → Appearance** in the native menu, or on
-the settings page. The choice is saved in the [app config](/doc/config).
+the settings page. The choice is saved in the [app config](/doc/config) and
+applied to the whole app: the React UI, native menus, dialogs and the window
+frame.
 
 import img1 from './dark-mode-settings-window.png'
 
 <Img src={img1} retina />
 
+In short, dark mode in Electron takes three pieces, and the template wires all of
+them:
+
+1. A persisted setting with the user's choice
+2. [`nativeTheme.themeSource`](https://www.electronjs.org/docs/latest/api/native-theme#nativethemethemesource)
+   set from the main process
+3. A renderer that follows the `prefers-color-scheme` media query
+
 ## How it works
 
-1. The `theme` config key is applied to Electron's
-   [`nativeTheme.themeSource`](https://www.electronjs.org/docs/latest/api/native-theme#nativethemethemesource)
-   at startup and on every change (`src/main/index.ts`).
+1. The `theme` config key is applied to Electron's `nativeTheme.themeSource` at
+   startup and on every change (`src/main/index.ts`).
 2. `themeSource` changes the native UI (menus, dialogs, title bar) **and** the
    `prefers-color-scheme` media query in the renderer.
 3. The renderer only follows `prefers-color-scheme`: `syncColorScheme()`
@@ -27,25 +36,211 @@ import img1 from './dark-mode-settings-window.png'
 Because the theme is applied by the main process before the window is shown,
 there is no flash of the wrong theme on startup.
 
+### The setting
+
+The theme is a zod enum in the shared config schema (`src/shared/config.ts`), so
+the main process and the renderer share the same type:
+
+```ts
+export const themeSchema = z.enum(['system', 'light', 'dark'])
+
+export const configSchema = z.object({
+  theme: themeSchema.default('system'),
+  // …
+})
+```
+
+The values match the ones `nativeTheme.themeSource` accepts, so the setting can
+be passed to Electron as is.
+
+### The main process
+
+On startup, before any window is created, the main process applies the saved
+theme, and applies it again whenever it changes:
+
+```ts
+nativeTheme.themeSource = config.get('theme')
+config.onChange('theme', () => {
+  nativeTheme.themeSource = config.get('theme')
+  updateMenu()
+})
+```
+
+It does not matter where the change comes from (the menu, the settings page or
+your own code): everything goes through `config.set('theme', …)`, and this
+listener is the only place that talks to `nativeTheme`.
+
+### The renderer
+
+The renderer never reads the setting to pick colors. It listens to the media
+query that Chromium updates from `themeSource`:
+
+```ts
+export function syncColorScheme(): void {
+  const query = window.matchMedia('(prefers-color-scheme: dark)')
+  const apply = () => document.documentElement.classList.toggle('dark', query.matches)
+  apply()
+  query.addEventListener('change', apply)
+}
+```
+
+`syncColorScheme()` is called once in `src/renderer/src/main.tsx`, before React
+renders. When the theme is **System** and the user switches the OS to dark mode,
+the media query changes and the app follows, with no IPC call involved.
+
+## Why nativeTheme instead of a CSS class only
+
+A common way to add dark mode to a web app is to store the choice in
+`localStorage` and toggle a class on `<html>`. In Electron, that leaves half of
+the app in the wrong theme:
+
+- **Native UI stays light.** Menus, context menus, file dialogs, the DevTools and
+  the window frame on macOS are drawn by the OS or by Electron, not by your CSS.
+  Only `themeSource` changes them.
+- **The window flashes.** The class is set after the page loads, so the first
+  frame uses the default colors.
+- **Two sources of truth.** The main process cannot see `localStorage`, so the
+  menu cannot show which theme is checked, and every window has to sync its own
+  copy.
+
+With `themeSource` as the single switch, the main process owns the setting and
+every window, menu and dialog follows it.
+
 ## Menu
 
 The native menu is built in `src/main/menu.ts`, with radio items for the three
-themes. It is rebuilt when the theme or the language changes, so the checked item
+themes:
+
+```ts
+{
+  label: t.appearance,
+  submenu: (['system', 'light', 'dark'] as const).map((value) => ({
+    label: t[value],
+    type: 'radio',
+    checked: theme === value,
+    click: () => config.set('theme', value)
+  }))
+}
+```
+
+The menu is rebuilt when the theme or the language changes, so the checked item
 and labels stay correct whichever side changed the setting.
 
 import img2 from './dark-mode-menu.png'
 
 <Img src={img2} retina bottom right center />
 
+## Settings page
+
+The settings page (`src/renderer/src/routes/settings.tsx`) shows a select bound
+to the config, and calls the `config.setTheme` tRPC procedure:
+
+```tsx
+const { data: config } = useSuspenseQuery(trpc.config.get.queryOptions())
+const setTheme = useMutation(trpc.config.setTheme.mutationOptions())
+
+<Select value={config.theme} onValueChange={(value) => setTheme.mutate(themeSchema.parse(value))}>
+```
+
+The procedure validates the value with `themeSchema` and calls
+`config.set('theme', input)`. The page does not update its own cache: the main
+process emits every config change on the `config.onChange` subscription, so the
+select also updates when the theme is changed from the menu.
+
+## Change or read the theme from code
+
+To change the theme from the main process, set the config key, never
+`nativeTheme` directly, so the menu, the settings page and the saved value stay
+in sync:
+
+```ts
+config.set('theme', 'dark')
+```
+
+From the renderer, call the existing procedure:
+`setTheme.mutate('dark')`.
+
+To know whether the app is **currently** dark (for example when the theme is
+**System**), use `nativeTheme` in the main process:
+
+```ts
+import { nativeTheme } from 'electron'
+
+nativeTheme.shouldUseDarkColors // true if the app is shown in dark mode
+nativeTheme.on('updated', () => {
+  // The OS theme or themeSource changed: update a tray icon, a native window…
+})
+```
+
+In the renderer, use `window.matchMedia('(prefers-color-scheme: dark)').matches`,
+or check for the `dark` class on `<html>`.
+
 ## Colors
 
 Theme colors are CSS variables in `src/renderer/src/styles.css`: `:root` for
 light, `.dark` for dark. Use the Tailwind classes that map to them
 (`bg-background`, `text-foreground`, `bg-muted`, `border`…) instead of fixed
-colors. Generate a new palette with the
-[shadcn/ui theme editor](https://ui.shadcn.com/themes) and paste the variables.
+colors. A component written with these classes works in both themes without any
+`dark:` class.
+
+### Change the palette
+
+Generate a new palette with the
+[shadcn/ui theme editor](https://ui.shadcn.com/themes) and paste the variables in
+`:root` and `.dark`. The template uses the neutral shadcn/ui palette in OKLCH, so
+pasted themes drop in without conversion.
+
+### Add a color
+
+To add a color of your own, for example a `success` color, define it for both
+themes and map it to Tailwind in the `@theme inline` block:
+
+```css
+:root {
+  --success: oklch(0.6 0.15 150);
+}
+
+.dark {
+  --success: oklch(0.7 0.15 150);
+}
+
+@theme inline {
+  --color-success: var(--success);
+}
+```
+
+`bg-success`, `text-success` and `border-success` then work everywhere and switch
+with the theme.
+
+### One-off cases
 
 For one-off cases, use the `dark:` variant: `className="bg-white dark:bg-black"`.
+The variant is defined in `styles.css` as `@custom-variant dark (&:is(.dark *))`,
+so it follows the `dark` class set by `syncColorScheme()`, not the OS directly.
+
+To show a different image in each theme (a logo on a transparent background,
+for example), render both and hide one:
+
+```tsx
+<img src={publicUrl('images/logo-light.png')} className="dark:hidden" alt="" />
+<img src={publicUrl('images/logo-dark.png')} className="hidden dark:block" alt="" />
+```
+
+### Scrollbars and form controls
+
+`styles.css` sets `color-scheme: dark` on `html.dark`, so Chromium draws
+scrollbars, native form controls and autofill in dark colors too.
+
+## Common issues
+
+- **A component stays light in dark mode.** It uses a fixed color (`bg-white`,
+  `text-gray-900`, a hex value). Replace it with a theme class such as
+  `bg-background` or `text-foreground`.
+- **The menu shows the wrong theme.** The theme was changed with
+  `nativeTheme.themeSource` instead of `config.set('theme', …)`, so the menu was
+  not rebuilt and the value was not saved.
+- **A new window starts in the wrong theme.** Call `syncColorScheme()` in the
+  entry file of every renderer, as `src/renderer/src/main.tsx` does.
 
 ## Related guides
 

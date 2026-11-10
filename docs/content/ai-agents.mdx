@@ -6,7 +6,25 @@ description: "Electron AppStack ships AGENTS.md, CLAUDE.md and skills so Claude 
 # AI Agents
 
 The template includes instructions so coding agents (Claude Code, Cursor, Codex,
-Copilot…) follow the same conventions as you.
+Copilot…) follow the same conventions as you. Ask for a feature, and the agent
+knows where the code goes, which libraries to use and which checks must pass
+before it is done.
+
+## Why Electron needs agent instructions
+
+Electron apps are easy to get subtly wrong, and most examples agents learned from
+are old or insecure. Without instructions, an agent asked to "read a file and show
+it in the UI" will often:
+
+- Call Node.js from the renderer, or turn on `nodeIntegration`
+- Add a new `ipcMain.handle` channel and a new global in the preload script, with
+  no types and no input validation
+- Write UI text in English inline, and colors that break in dark mode
+- Forget the database migration, the tests or the changelog entry
+
+The template's architecture rules out most of this (no Node.js in the renderer,
+one preload that only exposes tRPC), but an agent still has to know the right
+way to do it. `AGENTS.md` and the skills tell it.
 
 ## AGENTS.md
 
@@ -21,6 +39,17 @@ agents. It describes:
   for UI, a changeset for user-facing changes
 
 `CLAUDE.md` contains `@AGENTS.md`, which makes Claude Code load the same file.
+You maintain one file, and every agent reads the same rules.
+
+The rules are short and concrete, for example:
+
+```md
+- The renderer never uses Node.js or Electron APIs. Everything goes through a tRPC procedure.
+  Do not expose new globals from the preload script.
+- Validate every procedure input with zod. Put schemas used by both sides in `src/shared/`.
+- Every user-visible string in the renderer goes through `t()`; add keys to **every** locale in
+  `src/shared/locales/<lang>/`. Native menu labels live in `menu.json`.
+```
 
 ## Skills
 
@@ -39,12 +68,90 @@ be pointed to the folder.
 | `add-unit-test`      | Writing or updating unit tests |
 | `release`            | Recording a change in the changelog, publishing a version |
 
+### What a skill looks like
+
+A skill is a Markdown file with a `name` and a `description` in its frontmatter.
+The description says **when** to use it: it is what the agent reads to decide
+whether the skill applies. The body is the procedure, with the file paths and
+code of this codebase. Here is the start of `add-config-key`:
+
+```md
+---
+name: add-config-key
+description: Add a persisted app setting (user preference) stored with electron-store and
+  validated by zod. Use for settings, preferences and small app state that must survive restarts.
+---
+
+# Add a config key
+
+1. Add the key to `configSchema` in `src/shared/config.ts`. **It must have a `.default()`**: it is
+   used on first launch and when the stored value is invalid.
+2. Main process: `config.get('sidebarOpen')`, `config.set('sidebarOpen', false)`…
+3. To change it from the renderer, add a mutation in `src/main/trpc/routers/config.ts`…
+```
+
+The skills also hold the pitfalls an agent cannot guess from the code, such as
+"a bare async generator breaks with trpc-electron, wrap it with `ipcIterable()`"
+in `add-trpc-procedure`, or "never edit a migration that has been released" in
+`add-db-table`.
+
+### Using the skills with other agents
+
+Claude Code finds the skills on its own. With other agents, mention the skill in
+your request ("follow `.claude/skills/add-db-table/SKILL.md`") or add a line to
+your agent's rules file pointing to the folder. `AGENTS.md` already lists every
+skill by name at the end, so agents that read it know where to look.
+
+## Example: adding a feature
+
+Ask for the feature, not the steps:
+
+> Add a "pinned" flag to todos. Pinned todos are listed first, with a pin button
+> on each row.
+
+With the instructions, a typical run looks like this:
+
+1. **Database** (`add-db-table`): adds a `pinned` column to `src/main/db/schema.ts`
+   and runs `npm run db:generate` to create the migration.
+2. **IPC** (`add-trpc-procedure`): adds a `todos.setPinned` mutation with a zod
+   input, and sorts `todos.list` by `pinned`.
+3. **Tests** (`add-unit-test`): tests the procedure through
+   `router.createCaller(createTestContext())`, on an in-memory database.
+4. **UI** (`add-ui-component`, `add-translation`): a shadcn/ui button with a
+   lucide icon, a translated tooltip in every locale.
+5. **Changelog** (`release`): writes a `.changeset/*.md` file describing the
+   change for users.
+6. **Checks**: runs `npm run check:fix`, `npm run typecheck` and `npm test`, and
+   fixes what fails.
+
+Because IPC goes through tRPC, the renderer is typed from the router: if the agent
+renames a procedure or changes its input, `npm run typecheck` fails until both
+sides agree. That type check is what lets an agent work on the main process and
+the renderer in one task without breaking the boundary between them.
+
 ## Keep them up to date
 
 These files are part of your code. When you change a convention (a new folder, a
 new library, a different way to do something), update `AGENTS.md` and the
 matching skill, or agents will keep following the old way. Add skills for the
 tasks you repeat in your app.
+
+### Writing your own skills
+
+- **One task per skill**, named after the action (`add-export-format`,
+  `add-native-dialog`).
+- **Start the description with what it does, then when to use it**: "Add an
+  export format to the File menu. Use when the user asks to export data to a new
+  file type."
+- **Use the real paths and a short code sample** from your codebase, not a
+  generic explanation.
+- **Write down the mistakes** you had to correct in a previous run: they are the
+  most useful lines in a skill.
+- **End with how to check the result**: the command to run, or what to look at
+  in the app.
+
+A good moment to write one is right after an agent got a task wrong and you
+explained the fix: ask the agent to turn the explanation into a skill.
 
 ## Related guides
 
