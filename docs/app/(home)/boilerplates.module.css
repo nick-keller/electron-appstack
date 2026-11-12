@@ -246,6 +246,16 @@
   color: var(--fg);
 }
 
+/* Electron AppStack row in the ranking tables */
+.table tr[data-self] > * {
+  background: var(--tile-2);
+  color: var(--fg);
+}
+
+.table tr[data-self] th a {
+  color: var(--lime);
+}
+
 .table .numeric {
   font-variant-numeric: tabular-nums;
 }

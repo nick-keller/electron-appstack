@@ -1204,8 +1204,14 @@ a.tile:hover .go {
 
 .footerInner nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.92rem;
+}
+
+.footerInner nav strong {
+  margin-bottom: 4px;
+  color: var(--fg);
 }
 
 .footerInner nav a:hover {

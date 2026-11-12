@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import meta from '../../content/_meta'
+import { stackPages } from '../../lib/stacks'
 
 // llms.txt (https://llmstxt.org): a Markdown index of the site for AI assistants, generated at
 // build time from the docs frontmatter, in sidebar order
@@ -48,6 +49,11 @@ ${sections.join('\n\n')}
 
 - [Best Electron boilerplates](${siteUrl}/best-electron-boilerplate): ranking of maintained Electron boilerplates on features, Electron version, maintenance and popularity
 - [Electron AppStack vs other Electron boilerplates](${siteUrl}/compare): feature by feature comparison
+${stackPages.map((page) => `- [${page.ranking.title}](${siteUrl}${page.rankingPath}): ${page.ranking.intro}`).join('\n')}
+
+## Electron AppStack by stack
+
+${stackPages.map((page) => `- [${page.landing.title}](${siteUrl}${page.path}): ${page.landing.description}`).join('\n')}
 
 ## Optional
 

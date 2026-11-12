@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { stackPages } from '../../lib/stacks'
 import styles from './landing.module.css'
 import { Icon } from './lucide-icon'
 
@@ -41,14 +42,31 @@ export function SiteFooter() {
           <p>The free, production-ready fullstack Electron boilerplate.</p>
         </div>
         <nav aria-label="Footer">
+          <strong>Product</strong>
           <Link href="/doc/getting-started">Getting started</Link>
           <Link href="/doc">Documentation</Link>
           <Link href="/doc/licensing">Licensing</Link>
           <Link href="/doc/releasing">Releasing</Link>
           <Link href="/compare">Comparison</Link>
-          <Link href="/best-electron-boilerplate">Best Electron boilerplates</Link>
           <Link href="/doc/license">License</Link>
           <a href={githubUrl}>GitHub</a>
+        </nav>
+        <nav aria-label="Boilerplates by stack">
+          <strong>Boilerplates by stack</strong>
+          {stackPages.map((page) => (
+            <Link key={page.id} href={page.path}>
+              {page.keyword}
+            </Link>
+          ))}
+        </nav>
+        <nav aria-label="Rankings by stack">
+          <strong>Rankings</strong>
+          <Link href="/best-electron-boilerplate">Best Electron boilerplates</Link>
+          {stackPages.map((page) => (
+            <Link key={page.id} href={page.rankingPath}>
+              {page.ranking.title}
+            </Link>
+          ))}
         </nav>
       </div>
       <p className={styles.copyright}>© {new Date().getFullYear()} Electron AppStack</p>

@@ -7,7 +7,7 @@ export async function CodeBlock({
   className
 }: {
   code: string
-  lang?: 'tsx' | 'bash'
+  lang?: 'tsx' | 'ts' | 'bash' | 'css'
   className?: string
 }) {
   const { tokens } = await codeToTokens(code, { lang, theme: 'github-dark' })

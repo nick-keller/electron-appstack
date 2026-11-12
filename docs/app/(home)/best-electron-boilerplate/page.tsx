@@ -1,38 +1,32 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import {
-  electronMajor,
   featureCount,
   featureDefinitions,
-  formatDate,
-  formatNumber,
-  formatPrice,
-  inSentence,
   isOutdated,
   latestElectron,
   latestElectronMajor,
-  listToText,
-  majorsBehind,
   ranking,
-  type Scored,
   scoreWeights,
   selfId,
-  stackValue,
   topPicks,
   updatedAt,
   updatedYear
 } from '../../../lib/boilerplates'
+import { stackPages } from '../../../lib/stacks'
 import { openGraphImages } from '../../metadata'
-import {
-  BoilerplateLinks,
-  BoilerplatePage,
-  Cta,
-  ScoreBar,
-  SectionHead,
-  UpdatedNote
-} from '../boilerplate-ui'
+import { BoilerplatePage, Cta, SectionHead, UpdatedNote } from '../boilerplate-ui'
 import styles from '../boilerplates.module.css'
 import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
+import {
+  OutdatedList,
+  RankingList,
+  RankingTable,
+  rankingJsonLd,
+  scoreKeys,
+  weightLabels
+} from '../ranking-ui'
 
 const current = ranking.filter((b) => !isOutdated(b))
 const outdated = ranking.filter(isOutdated)
@@ -68,47 +62,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title, description, images: openGraphImages }
 }
 
-const weightLabels: Record<keyof typeof scoreWeights, string> = {
-  features: 'Features',
-  freshness: 'Electron version',
-  activity: 'Maintenance',
-  popularity: 'Popularity'
-}
-
-const scoreKeys = Object.keys(scoreWeights) as (keyof typeof scoreWeights)[]
-
-function outdatedReason(b: Scored) {
-  const reasons = [
-    ...(b.archived ? ['archived'] : []),
-    ...(majorsBehind(b) > 3
-      ? [`Electron ${electronMajor(b)}, ${majorsBehind(b)} major versions behind`]
-      : [])
-  ]
-  return reasons.join(', ')
-}
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'ItemList',
-  name: title,
-  description,
-  dateModified: updatedAt,
-  numberOfItems: current.length,
-  itemListElement: current.map((b, index) => ({
-    '@type': 'ListItem',
-    position: index + 1,
-    item: {
-      '@type': 'SoftwareSourceCode',
-      name: b.name,
-      description: b.description,
-      ...(b.github ? { codeRepository: `https://github.com/${b.github}` } : {}),
-      ...(b.website ? { url: b.website } : {}),
-      programmingLanguage: b.stack.language,
-      runtimePlatform: 'Electron',
-      offers: { '@type': 'Offer', price: String(b.price), priceCurrency: 'USD' }
-    }
-  }))
-}
+const jsonLd = rankingJsonLd({ name: title, description, dateModified: updatedAt, list: current })
 
 export default function BestBoilerplatePage() {
   return (
@@ -168,113 +122,14 @@ export default function BestBoilerplatePage() {
         <SectionHead eyebrow="At a glance" title="Quick comparison" id="overview">
           Every boilerplate still maintained, by overall score.
         </SectionHead>
-        <div className={styles.tableWrap}>
-          <table className={`${styles.table} ${styles.tableLeft}`}>
-            <thead>
-              <tr>
-                <th scope="col">Boilerplate</th>
-                <th scope="col">Score</th>
-                <th scope="col">Features</th>
-                <th scope="col">Electron</th>
-                <th scope="col">UI</th>
-                <th scope="col">Build</th>
-                <th scope="col">Stars</th>
-                <th scope="col">Last update</th>
-                <th scope="col">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {current.map((b, index) => (
-                <tr key={b.id}>
-                  <th scope="row" data-self={b.id === selfId || undefined}>
-                    <a href={`#${b.id}`}>
-                      {index + 1}. {b.name}
-                    </a>
-                  </th>
-                  <td className={styles.numeric}>{b.scores.overall}</td>
-                  <td className={styles.numeric}>
-                    {featureCount(b)}/{featureDefinitions.length}
-                  </td>
-                  <td className={styles.numeric}>{electronMajor(b)}</td>
-                  <td className={styles.text}>{stackValue(b, 'ui')}</td>
-                  <td className={styles.text}>{stackValue(b, 'build')}</td>
-                  <td className={styles.numeric}>
-                    {b.stars === undefined ? '–' : formatNumber(b.stars)}
-                  </td>
-                  <td className={styles.numeric}>{formatDate(b.lastCommit)}</td>
-                  <td>{formatPrice(b.price)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <RankingTable list={current} />
       </section>
 
       <section className={styles.section} aria-labelledby="ranking">
         <SectionHead eyebrow="Ranking" title="The full ranking" id="ranking">
           Each score is out of 100. See the methodology below for how it is computed.
         </SectionHead>
-        <ol className={styles.ranking}>
-          {current.map((b, index) => {
-            const included = featureDefinitions.filter((f) => b.features[f.key] === 'yes')
-            const stack = (['build', 'ui', 'styling', 'ipc', 'database', 'packaging'] as const)
-              .map((key) => stackValue(b, key))
-              .filter((value): value is string => !!value)
-            return (
-              <li
-                key={b.id}
-                id={b.id}
-                className={`${landing.tile} ${styles.rankItem}`}
-                data-accent={index === 0 ? 'lime' : undefined}
-              >
-                <span className={styles.rank}>#{index + 1}</span>
-                <div className={styles.rankBody}>
-                  <h3>{b.name}</h3>
-                  <p>{b.description}</p>
-                  <p className={styles.meta}>
-                    {b.stars !== undefined && (
-                      <span>
-                        <Icon name="star" size={14} /> {formatNumber(b.stars)} stars
-                      </span>
-                    )}
-                    <span>Electron {b.electron === 'latest' ? 'latest' : b.electron}</span>
-                    <span>Updated {formatDate(b.lastCommit)}</span>
-                    <span>{formatPrice(b.price)}</span>
-                    <span>{b.license}</span>
-                  </p>
-                  <div className={styles.chips}>
-                    {stack.map((value) => (
-                      <span key={value} className={styles.chip}>
-                        {value}
-                      </span>
-                    ))}
-                  </div>
-                  <p className={styles.meta}>
-                    <span>
-                      Includes {included.length} of {featureDefinitions.length} features:{' '}
-                      {listToText(included.map((f) => inSentence(f.label)))}.
-                    </span>
-                  </p>
-                  {b.create && (
-                    <code className={styles.meta} style={{ fontFamily: 'var(--mono)' }}>
-                      {b.create}
-                    </code>
-                  )}
-                  <BoilerplateLinks boilerplate={b} />
-                </div>
-                <div className={styles.scorePanel}>
-                  <span className={styles.overall}>
-                    {b.scores.overall}
-                    <small>/100</small>
-                  </span>
-                  {scoreKeys.map((key) => (
-                    <ScoreBar key={key} label={weightLabels[key]} value={b.scores[key]} />
-                  ))}
-                </div>
-              </li>
-            )
-          })}
-        </ol>
+        <RankingList list={current} />
       </section>
 
       {outdated.length > 0 && (
@@ -283,24 +138,7 @@ export default function BestBoilerplatePage() {
             Still popular in search results, but archived or stuck on an Electron version that no
             longer receives security fixes. Electron supports its latest three major versions.
           </SectionHead>
-          <div className={styles.cards}>
-            {outdated.map((b) => (
-              <article key={b.id} id={b.id} className={`${landing.tile} ${styles.card}`}>
-                <h3>{b.name}</h3>
-                <p>{b.description}</p>
-                <p className={styles.meta}>
-                  {b.stars !== undefined && (
-                    <span>
-                      <Icon name="star" size={14} /> {formatNumber(b.stars)}
-                    </span>
-                  )}
-                  <span>Updated {formatDate(b.lastCommit)}</span>
-                </p>
-                <p className={styles.verdict}>Outdated: {outdatedReason(b)}.</p>
-                <BoilerplateLinks boilerplate={b} />
-              </article>
-            ))}
-          </div>
+          <OutdatedList list={outdated} />
         </section>
       )}
 
@@ -355,6 +193,19 @@ export default function BestBoilerplatePage() {
             commits and Electron versions are refreshed from GitHub with a script. Features are
             checked by hand against each template's source code.
           </p>
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="by-stack">
+        <SectionHead eyebrow="By stack" title="Rankings by stack" id="by-stack">
+          The same scores, filtered on the stack you want to build with.
+        </SectionHead>
+        <div className={landing.compareLinks}>
+          {stackPages.map((page) => (
+            <Link key={page.id} href={page.rankingPath} className={landing.link}>
+              {page.ranking.title} <Icon name="arrow" size={18} />
+            </Link>
+          ))}
         </div>
       </section>
 

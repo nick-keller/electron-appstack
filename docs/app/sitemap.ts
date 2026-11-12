@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { MetadataRoute } from 'next'
+import { stackPages } from '../lib/stacks'
 
 // Generated at build time into out/sitemap.xml
 export const dynamic = 'force-static'
@@ -25,7 +26,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
     { path: '/', files: ['app/(home)/page.tsx'] },
     { path: '/best-electron-boilerplate', files: ['app/(home)/best-electron-boilerplate', 'data'] },
-    { path: '/compare', files: ['app/(home)/compare', 'data'] }
+    { path: '/compare', files: ['app/(home)/compare', 'data'] },
+    ...stackPages.flatMap((page) => [
+      { path: page.path, files: ['app/(home)/stack-landing.tsx', 'lib/stacks.ts'] },
+      { path: page.rankingPath, files: ['app/(home)/stack-ranking.tsx', 'lib/stacks.ts', 'data'] }
+    ])
   ]
 
   const docs = readdirSync(contentDir)

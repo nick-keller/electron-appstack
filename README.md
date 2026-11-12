@@ -18,6 +18,51 @@ The app you get after `npm run dev`: a todo list stored in SQLite and a settings
   <img src="docs/content/activation-window.png" alt="Electron AppStack license key activation window" width="33%" />
 </p>
 
+## Stack
+
+**Desktop**
+
+- [Electron](https://www.electronjs.org): cross-platform desktop runtime
+- [electron-vite](https://electron-vite.org): build tool and dev server
+- [Node.js](https://nodejs.org): main process runtime
+- [V8 bytecode](https://v8.dev): compiled main process
+
+**Frontend**
+
+- [React](https://react.dev): UI library, version 19
+- [TypeScript](https://www.typescriptlang.org): strict types everywhere
+- [Vite](https://vite.dev): instant hot reload
+- [TanStack Router](https://tanstack.com/router): type-safe file-based routing
+- [TanStack Query](https://tanstack.com/query): data fetching and caching
+- [Tailwind CSS](https://tailwindcss.com): utility-first styling, v4
+- [shadcn/ui](https://ui.shadcn.com): accessible components
+- [Radix UI](https://www.radix-ui.com): headless primitives
+- [Lucide](https://lucide.dev): icon set
+- [i18next](https://www.i18next.com): typed translations
+
+**Backend and data**
+
+- [tRPC](https://trpc.io): end-to-end typed IPC
+- [Zod](https://zod.dev): runtime validation
+- [SQLite](https://sqlite.org): embedded local database
+- [Drizzle ORM](https://orm.drizzle.team): typed queries and migrations
+- [electron-store](https://github.com/sindresorhus/electron-store): typed app config
+
+**Shipping and selling**
+
+- [electron-builder](https://www.electron.build): installers for every platform
+- [electron-updater](https://www.electron.build/auto-update): automatic updates
+- [GitHub Actions](https://github.com/features/actions): build, sign and publish
+- [Changesets](https://github.com/changesets/changesets): versions and changelog
+- [LicenseManager.dev](https://licensemanager.dev): license keys and activation
+- [Stripe](https://stripe.com): payments
+
+**Tooling**
+
+- [Biome](https://biomejs.dev): linting and formatting
+- [Vitest](https://vitest.dev): unit tests
+- [Claude Code](https://claude.com/claude-code): AGENTS.md and skills included
+
 ## Create an app
 
 Copy the template with [degit](https://github.com/Rich-Harris/degit):
