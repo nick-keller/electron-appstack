@@ -251,14 +251,14 @@ export const features: {
     title: 'Modern React stack',
     description:
       'React 19 with type-safe file-based routing from TanStack Router and TanStack Query.',
-    href: '/doc/ui',
+    href: '/doc/routing',
     icon: 'atom'
   },
   {
     title: 'Design system',
     description:
       'shadcn/ui components and Tailwind CSS v4, with system, light and dark themes built in.',
-    href: '/doc/ui',
+    href: '/doc/components',
     icon: 'palette'
   },
   {

@@ -1,0 +1,289 @@
+---
+title: "Routing in Electron with TanStack Router"
+description: "Type-safe, file-based routing in an Electron React app with TanStack Router: hash history, nested layouts, TanStack Query loaders and typed search params."
+---
+
+import { Callout, FileTree } from 'nextra/components'
+
+# Routing
+
+The renderer is a React 19 single-page app built with Vite. Its pages are routed
+by [TanStack Router](https://tanstack.com/router), and their data is loaded with
+[TanStack Query](https://tanstack.com/query) (see [IPC with tRPC](/doc/ipc)).
+
+TanStack Router uses **file-based routing**: every file in
+`src/renderer/src/routes/` is a route, and its path on disk is its URL. The
+template ships with three routes:
+
+<FileTree>
+  <FileTree.Folder name="src/renderer/src" defaultOpen>
+    <FileTree.Folder name="routes" defaultOpen>
+      <FileTree.File name="__root.tsx" />
+      <FileTree.File name="index.tsx" />
+      <FileTree.File name="settings.tsx" />
+    </FileTree.Folder>
+    <FileTree.File name="routeTree.gen.ts" />
+    <FileTree.File name="main.tsx" />
+  </FileTree.Folder>
+</FileTree>
+
+| File          | URL         | Role                                                  |
+| ------------- | ----------- | ----------------------------------------------------- |
+| `__root.tsx`  | (all)       | Layout of every page: navigation, update banner       |
+| `index.tsx`   | `/`         | Home page (the todo list)                             |
+| `settings.tsx`| `/settings` | Settings page                                         |
+
+## How it works
+
+- The TanStack Router Vite plugin (configured in `electron.vite.config.ts`) watches
+  the `routes/` folder and generates `routeTree.gen.ts`, the typed tree of all
+  routes. Commit it, but never edit it.
+- `main.tsx` creates the router from that tree and registers its type, so every
+  `<Link to>`, `navigate()` and `useParams()` is checked by TypeScript: a typo in
+  a URL or a missing parameter is a compile error.
+- Each route file exports a `Route` built with `createFileRoute(path)`. It holds
+  the component to render and optional loaders, search param validation, error
+  and pending components.
+- A route renders inside its parent: `__root.tsx` renders `<Outlet />` where the
+  child page goes.
+- `autoCodeSplitting` is on: each route component is loaded in its own chunk,
+  with no extra code on your side.
+
+The router uses **hash history** (`index.html#/settings`): in production the page
+is loaded from a `file://` URL, where path-based URLs do not work. You never
+write the `#` yourself: `<Link to="/settings">` produces the right URL.
+
+## Create a page
+
+Create `src/renderer/src/routes/help.tsx`:
+
+```tsx filename="src/renderer/src/routes/help.tsx"
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/help')({
+  component: Help
+})
+
+function Help() {
+  return <h1>Help</h1>
+}
+```
+
+<Callout>
+  With `npm run dev` running, you can also create an **empty** file: the plugin
+  fills it with this boilerplate and the right path. If you move or rename a
+  route file, the plugin updates the path string in `createFileRoute()` for you.
+</Callout>
+
+Then link to it, for example from the navigation in `__root.tsx`:
+
+```tsx
+import { Link } from '@tanstack/react-router'
+
+<Link to="/help" className="text-muted-foreground [&.active]:text-foreground">
+  Help
+</Link>
+```
+
+`Link` adds the `active` class (and `data-status="active"`) when its route is the
+current one. Use `activeProps={{ className: '…' }}` for more control.
+
+To navigate from code, for example after a form is submitted:
+
+```tsx
+import { useNavigate } from '@tanstack/react-router'
+
+const navigate = useNavigate()
+navigate({ to: '/settings' })
+```
+
+The main process can ask the renderer to navigate too, for example from the
+native menu: `appEvents.emit('navigate', '/settings')`. The root layout listens
+with a tRPC subscription.
+
+## File naming conventions
+
+| File                       | URL                 | Notes                                               |
+| -------------------------- | ------------------- | --------------------------------------------------- |
+| `help.tsx`                 | `/help`             |                                                     |
+| `notes/index.tsx`          | `/notes`            | `index` matches the folder itself                   |
+| `notes/$noteId.tsx`        | `/notes/:noteId`    | `$` marks a path parameter                          |
+| `notes/route.tsx`          | `/notes/*`          | Layout wrapping every route in `notes/`             |
+| `notes.$noteId.tsx`        | `/notes/:noteId`    | Flat form: a `.` is the same as a `/` folder        |
+| `_app.tsx` + `_app/home.tsx` | `/home`           | `_` prefix: layout that adds no URL segment         |
+| `(admin)/users.tsx`        | `/users`            | `(folder)`: groups files, does not change the URL   |
+| `files/$.tsx`              | `/files/*`          | Catch-all: the rest of the URL is in `params._splat` |
+| `-components/list.tsx`     | (none)              | `-` prefix: ignored, use it for colocated files     |
+
+Folders and flat files can be mixed, pick whatever is easier to read.
+
+## Nested routes and layouts
+
+Routes nest by folder. A `route.tsx` file in a folder is the **layout** of that
+folder: it renders the shared UI and an `<Outlet />` where the child route goes.
+
+<FileTree>
+  <FileTree.Folder name="routes" defaultOpen>
+    <FileTree.File name="__root.tsx" />
+    <FileTree.Folder name="notes" defaultOpen>
+      <FileTree.File name="route.tsx" />
+      <FileTree.File name="index.tsx" />
+      <FileTree.File name="$noteId.tsx" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+```tsx filename="src/renderer/src/routes/notes/route.tsx"
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/notes')({
+  component: NotesLayout
+})
+
+function NotesLayout() {
+  const notes = [{ id: '1', title: 'First note' }]
+  return (
+    <div className="flex gap-6">
+      <aside className="w-48 space-y-1">
+        {notes.map((note) => (
+          <Link key={note.id} to="/notes/$noteId" params={{ noteId: note.id }}>
+            {note.title}
+          </Link>
+        ))}
+      </aside>
+      <section className="flex-1">
+        <Outlet />
+      </section>
+    </div>
+  )
+}
+```
+
+```tsx filename="src/renderer/src/routes/notes/index.tsx"
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/notes/')({
+  component: () => <p className="text-muted-foreground">Pick a note</p>
+})
+```
+
+```tsx filename="src/renderer/src/routes/notes/$noteId.tsx"
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/notes/$noteId')({
+  component: Note
+})
+
+function Note() {
+  const { noteId } = Route.useParams() // typed: { noteId: string }
+  return <h1>Note {noteId}</h1>
+}
+```
+
+`/notes` renders `__root` → `notes/route` → `notes/index`, and `/notes/1`
+renders `__root` → `notes/route` → `notes/$noteId`. The sidebar stays mounted
+while you switch notes.
+
+Note how `Link` takes the route **pattern** in `to` and the values in `params`:
+TypeScript requires `noteId` and rejects unknown parameters.
+
+To share a layout between routes without adding a URL segment (for example an
+onboarding flow with no navigation bar), use a pathless layout: `_onboarding.tsx`
+renders the layout with an `<Outlet />`, and `_onboarding/welcome.tsx` is served
+at `/welcome`.
+
+## Loading data
+
+The `QueryClient` is passed to the router context, so a `loader` can prefetch
+data before the page renders. The component then reads it from the cache with
+`useSuspenseQuery`, which never returns `undefined`:
+
+```tsx filename="src/renderer/src/routes/index.tsx"
+export const Route = createFileRoute('/')({
+  loader: ({ context }) => context.queryClient.ensureQueryData(trpc.todos.list.queryOptions()),
+  component: Home
+})
+
+function Home() {
+  const { data: todos } = useSuspenseQuery(trpc.todos.list.queryOptions())
+  // …
+}
+```
+
+Loaders receive the route `params`, so a note page can load its note:
+
+```tsx
+export const Route = createFileRoute('/notes/$noteId')({
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(trpc.notes.get.queryOptions({ id: params.noteId })),
+  component: Note
+})
+```
+
+The router is created with `defaultPreload: 'intent'`: loaders run as soon as
+the user hovers a `Link`, so most pages open with their data already there.
+
+A route can also define:
+
+- `pendingComponent`: shown while the loader runs (after a short delay).
+- `errorComponent`: shown when the loader or the component throws.
+- `notFoundComponent`: shown when `notFound()` is thrown, for example when a
+  note does not exist.
+- `beforeLoad`: runs before the loader, for example to `throw redirect({ to: '/onboarding' })`.
+
+## Search params
+
+Search params (`?filter=done`) are validated and typed per route with
+`validateSearch`. Any schema with a `parse` method works, like the
+[Zod](https://zod.dev/) schemas used in the rest of the template:
+
+```tsx
+import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+
+const searchSchema = z.object({
+  filter: z.enum(['all', 'active', 'done']).catch('all')
+})
+
+export const Route = createFileRoute('/')({
+  validateSearch: (search) => searchSchema.parse(search),
+  component: Home
+})
+
+function Home() {
+  const { filter } = Route.useSearch() // 'all' | 'active' | 'done'
+  // …
+}
+```
+
+Change them with `<Link to="/" search={{ filter: 'done' }}>` or
+`navigate({ search: (prev) => ({ ...prev, filter: 'done' }) })`. Unlike
+`useState`, search params survive navigation (back and forward work) and
+reloads.
+
+## Going further
+
+The [TanStack Router documentation](https://tanstack.com/router/latest/docs/framework/react/overview)
+covers everything else. Useful pages:
+
+- [Routing concepts](https://tanstack.com/router/latest/docs/framework/react/routing/routing-concepts)
+  and [file naming conventions](https://tanstack.com/router/latest/docs/framework/react/routing/file-naming-conventions)
+- [Navigation](https://tanstack.com/router/latest/docs/framework/react/guide/navigation):
+  `Link`, `useNavigate`, relative links, `useBlocker` to confirm before leaving a page
+- [Data loading](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading)
+  and [external data loading](https://tanstack.com/router/latest/docs/framework/react/guide/external-data-loading)
+  (the TanStack Query pattern used here)
+- [Search params](https://tanstack.com/router/latest/docs/framework/react/guide/search-params)
+- [Not found errors](https://tanstack.com/router/latest/docs/framework/react/guide/not-found-errors)
+  and [authenticated routes](https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes)
+  (redirects in `beforeLoad`)
+- [Preloading](https://tanstack.com/router/latest/docs/framework/react/guide/preloading)
+  and [code splitting](https://tanstack.com/router/latest/docs/framework/react/guide/code-splitting)
+- [Devtools](https://tanstack.com/router/latest/docs/framework/react/devtools):
+  a panel to inspect routes, params and loader state
+
+## Related guides
+
+- [shadcn/ui and Tailwind CSS components in Electron](/doc/components) – build the pages
+- [Type-safe Electron IPC with tRPC](/doc/ipc) – load data from the main process
+- [Theming and dark mode in Electron](/doc/theming) – colors, radius and themes

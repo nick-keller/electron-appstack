@@ -2,3 +2,4 @@
 # Old or guessed URLs that Google reported as 404 in Search Console, pointed to the real page.
 /doc/trpc /doc/ipc 301
 /home / 301
+/doc/ui /doc/components 301

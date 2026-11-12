@@ -1,0 +1,234 @@
+---
+title: "shadcn/ui and Tailwind CSS components in Electron"
+description: "Use shadcn/ui in an Electron app: add components with the CLI, customize them with Tailwind CSS v4 and cn(), and build typed variants with cva."
+---
+
+import { Callout } from 'nextra/components'
+
+# Components
+
+The UI of the renderer is built with:
+
+| Library                                              | Used for                  |
+| ---------------------------------------------------- | ------------------------- |
+| [shadcn/ui](https://ui.shadcn.com/)                  | Components, copied into your code |
+| [Radix UI](https://www.radix-ui.com/)                | Accessible primitives under the components |
+| [class-variance-authority](https://cva.style/)       | Component variants        |
+| [Tailwind CSS v4](https://tailwindcss.com/)          | Styling                   |
+| [lucide-react](https://lucide.dev/)                  | Icons                     |
+
+[shadcn/ui](https://ui.shadcn.com/) is not a component library you install as a
+dependency: the CLI **copies the source code** of each component into
+`src/renderer/src/components/ui/`. You own these files and edit them like the
+rest of your code. They are built on [Radix UI](https://www.radix-ui.com/)
+primitives (accessibility, keyboard navigation, focus management) and styled
+with Tailwind.
+
+The template includes button, card, checkbox, input, label, select and separator.
+Import them from `@renderer/components/ui/<name>`:
+
+```tsx
+import { Button } from '@renderer/components/ui/button'
+
+<Button variant="outline" size="sm">Cancel</Button>
+```
+
+Put your own app-specific components in `src/renderer/src/components/` (like
+`update-banner.tsx`), not in `ui/`, so that `ui/` only contains shadcn
+components.
+
+## Find a component
+
+1. Browse the [component list](https://ui.shadcn.com/docs/components). Each page
+   shows a live preview, the install command, usage code and examples (for
+   instance [Dialog](https://ui.shadcn.com/docs/components/dialog)).
+2. For bigger pieces (a full sidebar layout, a login form, a settings page), look
+   at [Blocks](https://ui.shadcn.com/blocks): ready-made compositions of several
+   components that you copy into your code.
+3. The [registry directory](https://ui.shadcn.com/docs/directory) lists
+   third-party registries that work with the same CLI.
+
+Ignore the "Manual" installation tab and framework-specific instructions (like
+Next.js): the CLI already knows this project's setup.
+
+## Add a component
+
+Run the CLI from the project root. It reads `components.json`, which tells it
+where to write the files, which aliases to use in imports and where the CSS is:
+
+```sh
+npx shadcn@latest add dialog dropdown-menu
+npm run check:fix   # format the new files with Biome
+```
+
+Run `npx shadcn@latest add` with no names to pick from the list interactively.
+
+The CLI may change several things, so review the diff before committing. For
+example, `npx shadcn@latest add sidebar` produces:
+
+```sh
+ M src/renderer/src/styles.css                  # new --sidebar-* color variables
+?? src/renderer/src/components/ui/sidebar.tsx   # the component itself
+?? src/renderer/src/components/ui/sheet.tsx     # components it depends on…
+?? src/renderer/src/components/ui/skeleton.tsx
+?? src/renderer/src/components/ui/tooltip.tsx
+?? src/renderer/src/hooks/use-mobile.ts         # a hook it uses
+```
+
+- **Component files** in `components/ui/`, including the other components it
+  uses.
+- **npm dependencies** in `package.json` when the component needs one (for
+  example `sonner` for toasts, `cmdk` for the command palette). Most components
+  only use `radix-ui`, which is already installed.
+- **CSS variables** in `styles.css` when the component has its own colors (the
+  sidebar and chart components do).
+- **Hooks** in `src/renderer/src/hooks/`.
+
+If a file already exists (button.tsx is used by many components), the CLI asks
+before overwriting it. Answer **no** if you have customized it. Some components
+also need a provider: the sidebar, for instance, needs `<TooltipProvider>`
+around the app, which you would add in `__root.tsx`. The CLI prints these
+instructions at the end.
+
+## Customize a component
+
+Since the code is yours, there are three levels of customization:
+
+**1. One usage**: pass a `className`. Components merge it with their own classes
+using `cn()` from the [`cn`](https://github.com/shadcn-ui/cn) package, which
+resolves Tailwind conflicts: the last class wins.
+
+```tsx
+<Button className="w-full rounded-full">Continue</Button> {/* replaces rounded-md */}
+```
+
+Use `cn()` in your own components too, to combine conditional classes:
+
+```tsx
+import { cn } from 'cn'
+
+<li className={cn('py-2', todo.done && 'text-muted-foreground line-through')} />
+```
+
+**2. Every usage**: edit the file in `components/ui/`. Change default classes,
+add a variant (see below), add props, change the markup. For example, to make
+every card flat, remove `shadow-sm` in `card.tsx`.
+
+**3. The whole app**: change the theme variables in `styles.css` (see
+[Theming](/doc/theming)) to change colors and radius everywhere at once.
+
+Components set a `data-slot` attribute on their root element (`data-slot="button"`,
+`data-slot="card-header"`…). Parents can use it to style children:
+`className="[&_[data-slot=button]]:w-full"`.
+
+## Variants with cva
+
+Components with variants, like `Button`, are written with
+[class-variance-authority](https://cva.style/) (cva). `cva()` takes the base
+classes and a map of variants, and returns a function that builds the class
+string from props:
+
+```tsx filename="src/renderer/src/components/ui/button.tsx"
+const buttonVariants = cva(
+  // Base classes, always applied
+  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium …',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        outline: 'border bg-background shadow-xs hover:bg-accent …',
+        ghost: 'hover:bg-accent hover:text-accent-foreground …'
+        // …
+      },
+      size: {
+        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        sm: 'h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5',
+        icon: 'size-9'
+        // …
+      }
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default'
+    }
+  }
+)
+
+buttonVariants({ variant: 'outline', size: 'sm' })
+// → 'inline-flex … border bg-background … h-8 gap-1.5 …'
+```
+
+`VariantProps<typeof buttonVariants>` turns the variants into typed props, so
+`<Button variant="outlne">` is a TypeScript error.
+
+To add a variant, add a key to the map. It is immediately available, and typed:
+
+```tsx
+variant: {
+  // …
+  success: 'bg-success text-success-foreground hover:bg-success/90'
+}
+```
+
+```tsx
+<Button variant="success">Saved</Button>
+```
+
+(`bg-success` needs a `success` color, see [Add a color](/doc/theming#add-a-color).)
+
+cva also supports **compound variants**, classes applied only when several
+variants match:
+
+```tsx
+compoundVariants: [{ variant: 'outline', size: 'sm', class: 'border-2' }]
+```
+
+`buttonVariants` is exported, so you can give the button style to something that
+is not a `<button>`. You can also use `asChild`, which renders the child element
+with the button's classes and props:
+
+```tsx
+import { Link } from '@tanstack/react-router'
+
+<Link to="/settings" className={buttonVariants({ variant: 'outline' })}>Settings</Link>
+{/* or */}
+<Button asChild variant="outline">
+  <Link to="/settings">Settings</Link>
+</Button>
+```
+
+Learn more in the cva documentation:
+[variants](https://cva.style/docs/getting-started/variants),
+[compound variants](https://cva.style/docs/getting-started/variants#compound-variants),
+[TypeScript](https://cva.style/docs/getting-started/typescript) and
+[composing components](https://cva.style/docs/getting-started/composing-components).
+
+## Icons
+
+[lucide-react](https://lucide.dev/) is installed, and shadcn/ui components use
+it for their own icons. Find an icon on [lucide.dev/icons](https://lucide.dev/icons)
+and import it by name:
+
+```tsx
+import { SettingsIcon } from 'lucide-react'
+
+<Button variant="ghost" size="icon">
+  <SettingsIcon />
+</Button>
+```
+
+<Callout>
+  For the app icon and images, see [Icons and Images](/doc/assets).
+</Callout>
+
+## Native feel
+
+`styles.css` disables text selection outside of inputs and the rubber-band
+scroll effect, which feels closer to a native app. Remove these rules if you
+prefer the browser behavior.
+
+## Related guides
+
+- [Theming and dark mode in Electron](/doc/theming) – colors, radius, fonts and themes
+- [Routing in Electron with TanStack Router](/doc/routing) – pages, layouts and navigation
+- [Translate an Electron app with i18next](/doc/i18n) – translations and language selection

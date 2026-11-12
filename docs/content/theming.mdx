@@ -1,9 +1,15 @@
 ---
-title: "Dark mode in Electron: system, light and dark themes"
-description: "Add dark mode to an Electron app: follow the OS theme with nativeTheme, let users pick light or dark from the menu and keep Tailwind colors in sync."
+title: "Theming and dark mode in Electron with Tailwind"
+description: "Theme an Electron app with Tailwind CSS v4 and shadcn/ui variables, and add dark mode that follows the OS with nativeTheme, the native menu and settings."
 ---
 
-# Dark Mode
+import { Callout } from 'nextra/components'
+
+# Theming and Dark Mode
+
+All the colors, the radius and the fonts of the app are CSS variables in one
+stylesheet, `src/renderer/src/styles.css`. Every shadcn/ui component reads them,
+so changing a variable restyles the whole app at once.
 
 The app supports three themes: **System** (follows the OS), **Light** and
 **Dark**. The user picks one in **View → Appearance** in the native menu, or on
@@ -15,15 +21,195 @@ import img1 from './dark-mode-settings-window.png'
 
 <Img src={img1} retina alt="Electron app settings window in dark mode with the theme selector" />
 
-In short, dark mode in Electron takes three pieces, and the template wires all of
-them:
+## The stylesheet
+
+`styles.css` has four parts:
+
+```css filename="src/renderer/src/styles.css"
+@import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+/* 1. Light theme values */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  /* … */
+}
+
+/* 2. Dark theme values: same names, different values */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  /* … */
+}
+
+/* 3. Expose the variables to Tailwind */
+@theme inline {
+  --radius-lg: var(--radius);
+  --color-background: var(--background);
+  --color-primary: var(--primary);
+  /* … */
+}
+
+/* 4. Global styles */
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+```
+
+1. **`:root`** defines the light theme.
+2. **`.dark`** overrides the same variables when the `<html>` element has the
+   `dark` class (see [Dark mode](#dark-mode)). The `@custom-variant` line makes
+   Tailwind's `dark:` prefix use that class too.
+3. **`@theme inline`** creates Tailwind utilities. In Tailwind v4, any
+   `--color-<name>` in `@theme` generates `bg-<name>`, `text-<name>`,
+   `border-<name>`, `ring-<name>`… So `--color-primary: var(--primary)` is what
+   makes `bg-primary` exist. `inline` makes the utility use `var(--primary)`
+   directly, so it follows the `.dark` override.
+4. **`@layer base`** applies the theme to the page: default border color, body
+   background and text color.
+
+Use the Tailwind classes that map to these variables (`bg-background`,
+`text-foreground`, `bg-muted`, `border`…) instead of fixed colors. A component
+written with these classes works in both themes without any `dark:` class.
+
+## Colors
+
+### Naming convention
+
+Colors come in pairs: `<name>` is a background and `<name>-foreground` is the
+text color to use on it. Always use them together, so the text stays readable
+in both themes.
+
+| Variable                         | Used for                                              |
+| -------------------------------- | ----------------------------------------------------- |
+| `background` / `foreground`      | Page background and default text                      |
+| `card`, `popover`                | Surfaces of cards, and of menus, selects, dialogs     |
+| `primary`                        | Main actions (default button, checked checkbox)       |
+| `secondary`                      | Less important actions                                |
+| `muted`                          | Subtle backgrounds; `muted-foreground` for secondary text |
+| `accent`                         | Hover and focus state of items (menus, ghost buttons) |
+| `destructive`                    | Dangerous actions and errors                          |
+| `border`, `input`, `ring`        | Borders, input borders, focus ring                    |
+
+Colors use the [OKLCH](https://oklch.com/) format: `oklch(lightness chroma hue)`.
+Lightness goes from 0 (black) to 1 (white), chroma is the color intensity (0 is
+gray) and hue is the angle on the color wheel. The template's palette is
+neutral, so every color has a chroma of 0. Tailwind opacity modifiers work on
+all theme colors: `bg-primary/10`, `border-destructive/50`.
+
+### Change the palette
+
+Change the values in `:root` and `.dark`. For example, a blue primary color:
+
+```css filename="src/renderer/src/styles.css"
+:root {
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.546 0.245 262.881);
+}
+
+.dark {
+  --primary: oklch(0.623 0.214 259.815);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.623 0.214 259.815);
+}
+```
+
+Every component using `primary` (buttons, checkboxes, focus rings…) changes at
+once. To change the whole palette, pick one in the
+[shadcn/ui theme page](https://ui.shadcn.com/themes) or design one with
+[tweakcn](https://tweakcn.com/), copy the generated `:root` and `.dark` blocks,
+and paste them over the existing ones. The template uses OKLCH like these
+generators, so pasted themes drop in without conversion. Keep the variable
+names: components depend on them.
+
+### Add a color
+
+To add a `success` color, define it in all three places:
+
+```css filename="src/renderer/src/styles.css"
+:root {
+  /* … */
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(0.985 0 0);
+}
+
+.dark {
+  /* … */
+  --success: oklch(0.723 0.219 149.579);
+  --success-foreground: oklch(0.145 0 0);
+}
+
+@theme inline {
+  /* … */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+}
+```
+
+`bg-success`, `text-success-foreground`, `border-success`, `bg-success/10`… now
+exist, adapt to dark mode and autocomplete in your editor (with the
+[Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
+extension).
+
+<Callout>
+  Tailwind's default palette is still available (`bg-green-600`,
+  `text-zinc-500`…), but these colors do not change in dark mode. Prefer theme
+  colors, and use `dark:` for [one-off cases](#one-off-dark-styles).
+</Callout>
+
+## Radius
+
+`--radius` is the base radius. The Tailwind radius utilities are derived from it
+in `@theme inline`:
+
+| Class        | Value                      |
+| ------------ | -------------------------- |
+| `rounded-sm` | `calc(var(--radius) - 4px)` |
+| `rounded-md` | `calc(var(--radius) - 2px)` |
+| `rounded-lg` | `var(--radius)`            |
+| `rounded-xl` | `calc(var(--radius) + 4px)` |
+
+Change `--radius` in `:root` to make every component rounder (`1rem`) or sharper
+(`0.25rem`, or `0` for square corners) at once.
+
+## Fonts and other tokens
+
+The same mechanism works for anything Tailwind has a theme namespace for. For
+example, to use a custom font with `font-sans` (the body uses `system-ui` by
+default, which matches the OS):
+
+```css filename="src/renderer/src/styles.css"
+@theme inline {
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+}
+```
+
+Bundle the font file with the app (see [Icons and Images](/doc/assets)) rather
+than loading it from the internet, so the app works offline.
+
+## Dark mode
+
+Dark mode in Electron takes three pieces, and the template wires all of them:
 
 1. A persisted setting with the user's choice
 2. [`nativeTheme.themeSource`](https://www.electronjs.org/docs/latest/api/native-theme#nativethemethemesource)
    set from the main process
 3. A renderer that follows the `prefers-color-scheme` media query
 
-## How it works
+### How it works
 
 1. The `theme` config key is applied to Electron's `nativeTheme.themeSource` at
    startup and on every change (`src/main/index.ts`).
@@ -31,7 +217,7 @@ them:
    `prefers-color-scheme` media query in the renderer.
 3. The renderer only follows `prefers-color-scheme`: `syncColorScheme()`
    (`src/renderer/src/lib/theme.ts`) toggles the `dark` class on `<html>`, which
-   Tailwind and shadcn/ui use for dark styles.
+   activates the `.dark` variables and the `dark:` variant.
 
 Because the theme is applied by the main process before the window is shown,
 there is no flash of the wrong theme on startup.
@@ -88,7 +274,10 @@ export function syncColorScheme(): void {
 renders. When the theme is **System** and the user switches the OS to dark mode,
 the media query changes and the app follows, with no IPC call involved.
 
-## Why nativeTheme instead of a CSS class only
+`styles.css` also sets `color-scheme: dark` on `html.dark`, so Chromium draws
+scrollbars, native form controls and autofill in dark colors too.
+
+### Why nativeTheme instead of a CSS class only
 
 A common way to add dark mode to a web app is to store the choice in
 `localStorage` and toggle a class on `<html>`. In Electron, that leaves half of
@@ -106,7 +295,7 @@ the app in the wrong theme:
 With `themeSource` as the single switch, the main process owns the setting and
 every window, menu and dialog follows it.
 
-## Menu
+### Menu
 
 The native menu is built in `src/main/menu.ts`, with radio items for the three
 themes:
@@ -130,7 +319,7 @@ import img2 from './dark-mode-menu.png'
 
 <Img src={img2} retina bottom right center alt="Native macOS View menu with an Appearance submenu: System, Light and Dark" />
 
-## Settings page
+### Settings page
 
 The settings page (`src/renderer/src/routes/settings.tsx`) shows a select bound
 to the config, and calls the `config.setTheme` tRPC procedure:
@@ -147,7 +336,7 @@ The procedure validates the value with `themeSchema` and calls
 process emits every config change on the `config.onChange` subscription, so the
 select also updates when the theme is changed from the menu.
 
-## Change or read the theme from code
+### Change or read the theme from code
 
 To change the theme from the main process, set the config key, never
 `nativeTheme` directly, so the menu, the settings page and the saved value stay
@@ -175,48 +364,12 @@ nativeTheme.on('updated', () => {
 In the renderer, use `window.matchMedia('(prefers-color-scheme: dark)').matches`,
 or check for the `dark` class on `<html>`.
 
-## Colors
+### One-off dark styles
 
-Theme colors are CSS variables in `src/renderer/src/styles.css`: `:root` for
-light, `.dark` for dark. Use the Tailwind classes that map to them
-(`bg-background`, `text-foreground`, `bg-muted`, `border`…) instead of fixed
-colors. A component written with these classes works in both themes without any
-`dark:` class.
-
-### Change the palette
-
-Generate a new palette with the
-[shadcn/ui theme editor](https://ui.shadcn.com/themes) and paste the variables in
-`:root` and `.dark`. The template uses the neutral shadcn/ui palette in OKLCH, so
-pasted themes drop in without conversion.
-
-### Add a color
-
-To add a color of your own, for example a `success` color, define it for both
-themes and map it to Tailwind in the `@theme inline` block:
-
-```css
-:root {
-  --success: oklch(0.6 0.15 150);
-}
-
-.dark {
-  --success: oklch(0.7 0.15 150);
-}
-
-@theme inline {
-  --color-success: var(--success);
-}
-```
-
-`bg-success`, `text-success` and `border-success` then work everywhere and switch
-with the theme.
-
-### One-off cases
-
-For one-off cases, use the `dark:` variant: `className="bg-white dark:bg-black"`.
-The variant is defined in `styles.css` as `@custom-variant dark (&:is(.dark *))`,
-so it follows the `dark` class set by `syncColorScheme()`, not the OS directly.
+When a theme color does not fit, use the `dark:` variant:
+`className="bg-green-100 dark:bg-green-900"`. The variant is defined in
+`styles.css` as `@custom-variant dark (&:is(.dark *))`, so it follows the `dark`
+class set by `syncColorScheme()`, not the OS directly.
 
 To show a different image in each theme (a logo on a transparent background,
 for example), render both and hide one:
@@ -226,24 +379,33 @@ for example), render both and hide one:
 <img src={publicUrl('images/logo-dark.png')} className="hidden dark:block" alt="" />
 ```
 
-### Scrollbars and form controls
-
-`styles.css` sets `color-scheme: dark` on `html.dark`, so Chromium draws
-scrollbars, native form controls and autofill in dark colors too.
-
 ## Common issues
 
 - **A component stays light in dark mode.** It uses a fixed color (`bg-white`,
   `text-gray-900`, a hex value). Replace it with a theme class such as
   `bg-background` or `text-foreground`.
+- **A new color does not exist as a class.** It is defined in `:root` but not
+  mapped in `@theme inline` as `--color-<name>`.
 - **The menu shows the wrong theme.** The theme was changed with
   `nativeTheme.themeSource` instead of `config.set('theme', …)`, so the menu was
   not rebuilt and the value was not saved.
 - **A new window starts in the wrong theme.** Call `syncColorScheme()` in the
   entry file of every renderer, as `src/renderer/src/main.tsx` does.
 
+## Going further
+
+- [shadcn/ui theming](https://ui.shadcn.com/docs/theming): the list of
+  variables, including the `chart-*` and `sidebar-*` ones added by those
+  components
+- [shadcn/ui with Tailwind v4](https://ui.shadcn.com/docs/tailwind-v4)
+- [Tailwind theme variables](https://tailwindcss.com/docs/theme): every
+  namespace (`--color-*`, `--font-*`, `--radius-*`, `--shadow-*`, `--breakpoint-*`…)
+- [Tailwind colors](https://tailwindcss.com/docs/colors) and
+  [dark mode](https://tailwindcss.com/docs/dark-mode)
+- [Electron nativeTheme](https://www.electronjs.org/docs/latest/api/native-theme)
+
 ## Related guides
 
-- [React, TanStack Router, shadcn/ui and Tailwind in Electron](/doc/ui) – routing and components
+- [shadcn/ui and Tailwind CSS components in Electron](/doc/components) – add and customize components
 - [Typed settings with electron-store](/doc/config) – preferences and window state
 - [Translate an Electron app with i18next](/doc/i18n) – translations and language selection

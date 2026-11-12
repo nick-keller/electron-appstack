@@ -145,7 +145,7 @@ export const stackPages: StackPage[] = [
           description:
             'File-based routes: a file in routes/ is a page, and links and params are checked by the compiler.',
           icon: 'layers',
-          href: '/doc/ui'
+          href: '/doc/routing'
         },
         {
           title: 'TanStack Query over IPC',
@@ -159,7 +159,7 @@ export const stackPages: StackPage[] = [
           description:
             'Accessible components copied into your code, Tailwind CSS v4 and a dark mode that follows the OS.',
           icon: 'palette',
-          href: '/doc/ui'
+          href: '/doc/components'
         }
       ],
       code: {
@@ -270,7 +270,7 @@ export const stackPages: StackPage[] = [
           description:
             'Aliases point at the renderer, so the shadcn CLI writes components to src/renderer/src/components/ui with working imports.',
           icon: 'settings',
-          href: '/doc/ui'
+          href: '/doc/components'
         },
         {
           title: 'New York style, CSS variables',
@@ -291,7 +291,7 @@ export const stackPages: StackPage[] = [
           description:
             'Accessible primitives from the radix-ui package and lucide-react icons, already installed for the components you add.',
           icon: 'layers',
-          href: '/doc/ui'
+          href: '/doc/components'
         }
       ],
       code: {
@@ -304,7 +304,7 @@ export const stackPages: StackPage[] = [
 # Imported with the renderer alias:
 # @renderer/components/ui/dialog`,
         lang: 'bash',
-        href: '/doc/ui',
+        href: '/doc/components',
         link: 'Read the UI guide'
       },
       skipFeatures: ['Design system', 'Dark mode'],
@@ -426,7 +426,7 @@ export const stackPages: StackPage[] = [
           description:
             'React, TanStack Router and Tailwind CSS plugins in the renderer. Add any Vite plugin next to them.',
           icon: 'layers',
-          href: '/doc/ui'
+          href: '/doc/routing'
         }
       ],
       code: {
@@ -547,7 +547,7 @@ export const stackPages: StackPage[] = [
           description:
             'The @tailwindcss/vite plugin and one @import line. No tailwind.config.js, no PostCSS setup.',
           icon: 'zap',
-          href: '/doc/ui'
+          href: '/doc/theming'
         },
         {
           title: 'Theme tokens',
@@ -568,7 +568,7 @@ export const stackPages: StackPage[] = [
           description:
             'shadcn/ui components styled with Tailwind, Radix UI primitives, Lucide icons and tw-animate-css.',
           icon: 'layers',
-          href: '/doc/ui'
+          href: '/doc/components'
         }
       ],
       code: {
@@ -707,7 +707,7 @@ export const stackPages: StackPage[] = [
           description:
             'TanStack Router generates a route tree, so links, params and search params are checked.',
           icon: 'layers',
-          href: '/doc/ui'
+          href: '/doc/routing'
         }
       ],
       code: {
