@@ -69,3 +69,7 @@ npm run dev
 - Replace `build/icon.png` and `build/background*.png`
 - Set up the release secrets (see the [release documentation](https://electron-appstack.com/releasing))
 - Read the documentation at [electron-appstack.com](https://electron-appstack.com)
+
+## License
+
+This template is [Electron AppStack](https://electron-appstack.com), open source under the MIT License (see `LICENSE.md`). Keep that notice with the template's source code. Your app can use any license you choose.

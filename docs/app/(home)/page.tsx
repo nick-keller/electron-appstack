@@ -530,13 +530,13 @@ const faq: { question: string; answer: string; content?: ReactNode }[] = [
   {
     question: 'What does the license allow?',
     answer:
-      'Electron AppStack is free, source-available software. You can use and modify it to build commercial apps, and sell those apps and their installers. You cannot sell the boilerplate itself as a template, or publish a repackaged or lightly modified version of it as a competing starter kit.',
+      'Electron AppStack is open source under the MIT License. You can use, modify, fork and redistribute it, build commercial apps with it and sell those apps and their installers. Just keep the copyright notice and license text in copies of the source code.',
     content: (
       <>
-        Electron AppStack is free, source-available software. You can use and modify it to build
-        commercial apps, and sell those apps and their installers. You cannot sell the boilerplate
-        itself as a template, or publish a repackaged or lightly modified version of it as a
-        competing starter kit. Read the <Link href="/doc/license">full license</Link>.
+        Electron AppStack is open source under the MIT License. You can use, modify, fork and
+        redistribute it, build commercial apps with it and sell those apps and their installers.
+        Just keep the copyright notice and license text in copies of the source code. Read the{' '}
+        <Link href="/doc/license">full license</Link>.
       </>
     )
   },
@@ -637,7 +637,7 @@ const jsonLd = [
         codeRepository: githubUrl,
         programmingLanguage: 'TypeScript',
         runtimePlatform: 'Electron',
-        license: `${siteUrl}/doc/license`,
+        license: 'https://opensource.org/license/mit',
         author: { '@id': author['@id'] },
         publisher: { '@id': organization['@id'] },
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }

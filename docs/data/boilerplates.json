@@ -12,7 +12,7 @@
       "docs": "https://electron-appstack.com/doc",
       "create": "npx degit nick-keller/electron-appstack/template my-app",
       "price": 0,
-      "license": "Electron AppStack License (source-available)",
+      "license": "MIT",
       "scope": "full",
       "archived": false,
       "stars": 1,

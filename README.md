@@ -6,6 +6,18 @@ A complete Electron + TypeScript starter (React, tRPC, SQLite, auto update, sign
 
 **Documentation: [electron-appstack.com](https://electron-appstack.com)**
 
+## Screenshots
+
+The app you get after `npm run dev`: a todo list stored in SQLite and a settings page with light and dark themes. The license activation window appears once you turn licensing on.
+
+<p>
+  <img src="docs/content/main-app.png" alt="Electron AppStack main window: todo list stored in a local SQLite database with Drizzle ORM" width="49%" />
+  <img src="docs/content/dark-mode-settings-window.png" alt="Electron AppStack settings window in dark mode with theme, language and versions" width="49%" />
+</p>
+<p>
+  <img src="docs/content/activation-window.png" alt="Electron AppStack license key activation window" width="33%" />
+</p>
+
 ## Create an app
 
 Copy the template with [degit](https://github.com/Rich-Harris/degit):
@@ -56,6 +68,6 @@ The comparison page (`/compare`) and the ranking page (`/best-electron-boilerpla
 
 ## License
 
-Electron AppStack is free, source-available software under the [Electron AppStack License](LICENSE.md). You can use and modify it to build commercial apps and sell them, but not sell the boilerplate itself or publish it as a competing starter kit.
+Electron AppStack is open source under the [MIT License](LICENSE.md). Contributions are welcome: open an issue or a pull request.
 
-The license is also published at [electron-appstack.com/doc/license](https://electron-appstack.com/doc/license), from `docs/content/license.mdx`: keep it in sync with `LICENSE.md`.
+The license is also published at [electron-appstack.com/doc/license](https://electron-appstack.com/doc/license), from `docs/content/license.mdx`: keep it in sync with `LICENSE.md` and `template/LICENSE.md`.

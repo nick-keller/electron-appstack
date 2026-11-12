@@ -38,7 +38,7 @@ export function GET() {
 
   const body = `# Electron AppStack
 
-> Free, production-ready Electron boilerplate: React 19, TypeScript, tRPC, SQLite with Drizzle, auto update, code signing and notarization, license keys with Stripe and V8 bytecode source protection. Source-available: free to build and sell commercial apps.
+> Free, production-ready Electron boilerplate: React 19, TypeScript, tRPC, SQLite with Drizzle, auto update, code signing and notarization, license keys with Stripe and V8 bytecode source protection. Open source (MIT): free to use, modify, redistribute and build commercial apps.
 
 Create an app: \`npx degit nick-keller/electron-appstack/template my-app\`
 
