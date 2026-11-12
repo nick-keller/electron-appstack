@@ -7,6 +7,7 @@ import {
   latestElectron,
   latestElectronMajor,
   ranking,
+  rankingDescription,
   scoreWeights,
   selfId,
   topPicks,
@@ -33,10 +34,10 @@ const outdated = ranking.filter(isOutdated)
 const { winner, alsoWon, picks } = topPicks()
 
 const title = `Best Electron boilerplates in ${updatedYear}`
-const description = `The ${current.length} best Electron boilerplates of ${updatedYear}, ranked on ${featureDefinitions.length} features, Electron version, maintenance and popularity: ${current
-  .slice(0, 3)
-  .map((b) => b.name)
-  .join(', ')} and more.`
+const description = rankingDescription(
+  `The ${current.length} best Electron boilerplates of ${updatedYear}, ranked on ${featureDefinitions.length} features, maintenance and popularity`,
+  current.map((b) => b.name)
+)
 
 export const metadata: Metadata = {
   title: { absolute: `${title}: ${current.length} starters compared` },

@@ -398,6 +398,20 @@ export function listToText(items: string[], conjunction = 'and') {
   return `${items.slice(0, -1).join(', ')} ${conjunction} ${items[items.length - 1]}`
 }
 
+// Google cuts meta descriptions around 155-160 characters
+export const maxDescriptionLength = 155
+
+// Ranking meta description naming the top boilerplates, with as many names as fit the length limit
+export function rankingDescription(intro: string, names: string[]) {
+  for (let count = Math.min(3, names.length); count > 0; count--) {
+    const shown = names.slice(0, count)
+    const list = names.length > count ? `${shown.join(', ')} and more` : listToText(shown)
+    const description = `${intro}: ${list}.`
+    if (description.length <= maxDescriptionLength) return description
+  }
+  return `${intro}.`
+}
+
 export function formatNumber(value: number) {
   return new Intl.NumberFormat('en-US').format(value)
 }

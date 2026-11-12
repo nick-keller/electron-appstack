@@ -1,0 +1,4 @@
+# Cloudflare Workers Static Assets redirects (copied to out/_redirects at build time).
+# Old or guessed URLs that Google reported as 404 in Search Console, pointed to the real page.
+/doc/trpc /doc/ipc 301
+/home / 301

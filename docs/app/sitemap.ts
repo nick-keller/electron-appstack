@@ -10,8 +10,24 @@ export const dynamic = 'force-static'
 const baseUrl = 'https://electron-appstack.com'
 const contentDir = join(process.cwd(), 'content')
 
-// Date of the last commit touching these files, or nothing outside a git checkout
+// A shallow clone (CI builds often fetch depth 1) only knows the last commit, so every page would
+// get the same date. Wrong dates make Google ignore lastmod for the whole sitemap: omit it instead
+function isShallowClone() {
+  try {
+    return (
+      execFileSync('git', ['rev-parse', '--is-shallow-repository'], { encoding: 'utf8' }).trim() ===
+      'true'
+    )
+  } catch {
+    return true
+  }
+}
+
+const hasFullHistory = !isShallowClone()
+
+// Date of the last commit touching these files, or nothing outside a full git checkout
 function lastModified(...files: string[]) {
+  if (!hasFullHistory) return undefined
   try {
     const date = execFileSync('git', ['log', '-1', '--format=%cI', '--', ...files], {
       encoding: 'utf8'

@@ -37,7 +37,7 @@ import landing from '../landing.module.css'
 import { Icon } from '../lucide-icon'
 
 const title = 'How does Electron AppStack compare to other boilerplates?'
-const description = `Electron AppStack compared side by side to ${others.length} Electron boilerplates, including ${others
+const description = `Electron AppStack compared to ${others.length} Electron boilerplates, including ${others
   .slice()
   .sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0))
   .slice(0, 2)

@@ -2,8 +2,8 @@ import Link from 'next/link'
 import {
   featureDefinitions,
   isOutdated,
-  listToText,
   ranking,
+  rankingDescription,
   scoreWeights,
   selfId,
   updatedAt,
@@ -39,9 +39,10 @@ export function stackRanking(page: StackPage) {
 export function stackRankingMeta(page: StackPage) {
   const { current } = stackRanking(page)
   const title = `${page.ranking.title} in ${updatedYear}`
-  const names = current.slice(0, 3).map((b) => b.name)
-  const list = current.length > 3 ? `${names.join(', ')} and more` : listToText(names)
-  const description = `The ${current.length} best Electron ${page.ranking.shortTitle} boilerplates of ${updatedYear}, ranked on ${featureDefinitions.length} features, Electron version, maintenance and popularity: ${list}.`
+  const description = rankingDescription(
+    `The ${current.length} best Electron ${page.ranking.shortTitle} boilerplates of ${updatedYear}, ranked on features, maintenance and popularity`,
+    current.map((b) => b.name)
+  )
   return { title, description }
 }
 

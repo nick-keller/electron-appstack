@@ -113,9 +113,9 @@ export const stackPages: StackPage[] = [
     ],
     match: (b) => has(b, 'ui', 'React'),
     landing: {
-      title: 'Electron React Boilerplate with TypeScript, tRPC and SQLite (Free)',
+      title: 'Electron React Boilerplate: TypeScript, tRPC, SQLite (Free)',
       description:
-        'Free Electron React boilerplate: React 19, TypeScript, TanStack Router and Query, shadcn/ui, typed IPC with tRPC, SQLite, auto update, signed releases and license keys.',
+        'Free Electron React boilerplate: React 19, TypeScript, TanStack Router, shadcn/ui, typed IPC with tRPC, SQLite, auto update and signed releases.',
       keywords: [
         'electron react boilerplate',
         'electron react template',
@@ -245,9 +245,9 @@ export const stackPages: StackPage[] = [
     ],
     match: (b) => b.stack.components === 'shadcn/ui',
     landing: {
-      title: 'Electron shadcn/ui Boilerplate: every component one command away',
+      title: 'Electron shadcn/ui Boilerplate with Tailwind v4 (Free)',
       description:
-        'Free Electron + shadcn/ui boilerplate with Tailwind CSS v4, Radix UI and Lucide. components.json is ready for Electron: add any shadcn component in one command, dark mode follows the OS.',
+        'Free Electron shadcn/ui boilerplate with Tailwind v4, Radix UI and Lucide. Add any shadcn component in one command, dark mode follows the OS.',
       keywords: [
         'electron shadcn',
         'electron shadcn boilerplate',
@@ -380,9 +380,9 @@ export const stackPages: StackPage[] = [
     ],
     match: (b) => /Vite/.test(String(b.stack.build)),
     landing: {
-      title: 'Electron Vite Boilerplate: electron-vite, React and TypeScript (Free)',
+      title: 'Electron Vite Boilerplate: electron-vite and React (Free)',
       description:
-        'Free Electron Vite boilerplate built on electron-vite: hot reload for main, preload and renderer, V8 bytecode in production, React, TypeScript, tRPC, SQLite and signed releases.',
+        'Free Electron Vite boilerplate on electron-vite: hot reload for main, preload and renderer, V8 bytecode, React, TypeScript, tRPC and SQLite.',
       keywords: [
         'electron vite boilerplate',
         'electron vite template',
@@ -522,9 +522,9 @@ export const stackPages: StackPage[] = [
     ],
     match: (b) => has(b, 'styling', 'Tailwind CSS'),
     landing: {
-      title: 'Electron Tailwind CSS Boilerplate: Tailwind v4, shadcn/ui and dark mode',
+      title: 'Electron Tailwind CSS Boilerplate: v4, shadcn/ui, dark mode',
       description:
-        'Free Electron Tailwind CSS boilerplate: Tailwind v4 through its Vite plugin, theme tokens as CSS variables, shadcn/ui components and a dark mode synced with the OS, plus a full desktop stack.',
+        'Free Electron Tailwind CSS boilerplate: Tailwind v4 via its Vite plugin, theme tokens as CSS variables, shadcn/ui and dark mode synced with the OS.',
       keywords: [
         'electron tailwind',
         'electron tailwind boilerplate',
@@ -661,9 +661,9 @@ export const stackPages: StackPage[] = [
     ],
     match: (b) => b.stack.language === 'TypeScript',
     landing: {
-      title: 'Electron TypeScript Boilerplate: strict types from database to UI',
+      title: 'Electron TypeScript Boilerplate: strict types, DB to UI',
       description:
-        'Free Electron TypeScript boilerplate in strict mode: typed IPC with tRPC, typed SQLite queries with Drizzle, typed settings, routes and translations, plus auto update and signed releases.',
+        'Free Electron TypeScript boilerplate in strict mode: typed IPC with tRPC, typed SQLite with Drizzle, typed settings, routes and translations.',
       keywords: [
         'electron typescript boilerplate',
         'electron typescript template',
@@ -786,9 +786,9 @@ export const stackPages: StackPage[] = [
     ],
     match: (b) => b.features.typedIpc !== 'no',
     landing: {
-      title: 'Electron tRPC Boilerplate: type-safe IPC with tRPC v11 and React',
+      title: 'Electron tRPC Boilerplate: type-safe IPC with tRPC v11',
       description:
-        'Free Electron tRPC boilerplate: type-safe IPC with tRPC v11, zod validation in the main process, TanStack Query in React, subscriptions, SQLite with Drizzle, auto update and signed releases.',
+        'Free Electron tRPC boilerplate: type-safe IPC with tRPC v11, zod validation in main, TanStack Query in React, subscriptions and SQLite.',
       keywords: [
         'electron trpc',
         'electron trpc boilerplate',
@@ -869,7 +869,7 @@ export const stackPages: StackPage[] = [
       ]
     },
     ranking: {
-      title: 'Best Electron boilerplates with tRPC and type-safe IPC',
+      title: 'Best Electron tRPC boilerplates for type-safe IPC',
       shortTitle: 'tRPC and typed IPC',
       intro:
         'Every Electron boilerplate with typed calls between the renderer and the main process, through tRPC, oRPC or a typed bridge, scored on the same features, Electron version, maintenance and popularity as our main ranking.',

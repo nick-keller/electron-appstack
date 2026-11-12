@@ -32,7 +32,7 @@ import { githubUrl, SiteFooter, SiteHeader } from './site'
 
 const title = 'Electron Boilerplate – Production-ready, Fullstack and Free'
 const description =
-  'Free, production-ready Electron boilerplate: React, TypeScript, tRPC, SQLite, auto update, code signing and Stripe license keys. Ship your desktop app in days.'
+  'Free, production-ready Electron boilerplate: React, TypeScript, tRPC, SQLite, auto update, code signing and license keys. Ship your desktop app in days.'
 
 export const metadata: Metadata = {
   title: { absolute: title },
